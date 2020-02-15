@@ -1,0 +1,10 @@
+#!/bin/sh
+set -ex
+isort --recursive src/ tests/
+black src/ tests/
+mypy src/xml_dataclasses/ --strict
+pylint src/
+
+set +e
+pytest tests/ --cov=xml_dataclasses -s --pdb --pdbcls=IPython.terminal.debugger:Pdb
+coverage html

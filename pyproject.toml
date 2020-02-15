@@ -1,0 +1,54 @@
+[tool.poetry]
+name = "xml_dataclasses"
+version = "0.0.1"
+description = "(De)serialize XML documents into specially-annotated dataclasses"
+authors = ["Toby Fleming <tobywf@users.noreply.github.com>"]
+license = "MPL-2.0"
+readme = "README.md"
+homepage = "https://github.com/tobywf/xml_dataclasses"
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Topic :: Text Processing :: Markup :: XML",
+]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+lxml = "^4.5.0"
+typing_inspect = "^0.5.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.3.5"
+black = "^19.10b0"
+isort = "^4.3.21"
+pylint = "^2.4.4"
+pytest-cov = "^2.8.1"
+mypy = "^0.761"
+ipython = "^7.12.0"
+coverage = {extras = ["toml"], version = "^5.0.3"}
+
+[tool.isort]
+# see https://black.readthedocs.io/en/stable/the_black_code_style.html
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+line_length = 88
+
+indent = '    '
+combine_as_imports = true
+
+[tool.coverage.run]
+branch = true
+
+[tool.coverage.report]
+fail_under = 100
+
+[build-system]
+requires = ["poetry>=1.0.0"]
+build-backend = "poetry.masonry.api"
