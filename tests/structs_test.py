@@ -10,7 +10,7 @@ from xml_dataclasses.structs import (
     TextInfo,
     XmlDataclass,
     XmlFieldType,
-    _unpack_union_type,
+    _check_str_type,
     _xml_field,
     attr,
     child,
@@ -49,106 +49,62 @@ class XmlDt2:
     __ns__ = None
 
 
+@xml_dataclass
+class XmlDt3:
+    __ns__ = NS
+
+
+INVALID_STR_TYPES = [
+    List[str],
+    Optional[List[str]],
+    int,
+    Optional[int],
+    Dt1,
+    XmlDt1,
+    List[XmlDt1],
+]
+
+
 @pytest.mark.parametrize(
-    "cls,result", [(object, False), (Dt1, False), (XmlDt1, True)],
+    "cls,result",
+    [
+        (int, False),
+        (str, False),
+        (object, False),
+        (Dt1, False),
+        (XmlDt1, True),
+        (XmlDt2, True),
+    ],
 )
 def test_is_xml_dataclass(cls, result):
     assert is_xml_dataclass(cls) is result
 
 
+@pytest.mark.parametrize("tp,is_opt", [(str, False), (Optional[str], True)])
+def test__check_str_type_good_path(tp, is_opt):
+    f = MockField(tp=tp)
+    assert _check_str_type(f) is is_opt
+
+
 @pytest.mark.parametrize(
-    "type_in,type_out",
+    "type_in",
     [
-        (str, str),
-        (Optional[str], str),
-        (Optional[List[str]], List[str]),
-        (XmlDataclass, XmlDataclass),
-        (Optional[XmlDataclass], XmlDataclass),
-        (Optional[List[XmlDataclass]], List[XmlDataclass]),
+        int,
+        object,
+        Dt1,
+        XmlDataclass,
+        Optional[XmlDataclass],
+        List[XmlDataclass],
+        Optional[List[XmlDataclass]],
+        Union[str, XmlDataclass],
+        List[Union[str, XmlDataclass]],
     ],
 )
-def test__unpack_union_type_good_path(type_in, type_out):
-    f = MockField(tp=type_in)
-    assert _unpack_union_type(f) is type_out
-
-
-@pytest.mark.parametrize("type_in", [Union[str, XmlDataclass]])
-def test__unpack_union_type_bad_path(type_in):
+def test__check_str_type_bad_path(type_in):
     f = MockField(tp=type_in)
 
     with pytest.raises(ValueError):
-        _unpack_union_type(f)
-
-
-def make_ci(tp_in, f, tp_out, xml_name, is_list, is_req, is_opt):
-    cls = make_xml_dt(tp_in, f)
-    return (cls, ChildInfo(f, "bar", xml_name, tp_out, is_list, is_req, is_opt))
-
-
-@pytest.mark.parametrize(
-    "cls,info",
-    [
-        make_ci(XmlDt1, child(), XmlDt1, f"{{{NS}}}bar", False, True, False),
-        make_ci(XmlDt2, child(), XmlDt2, "bar", False, True, False),
-        make_ci(
-            XmlDt1, child(rename="baz"), XmlDt1, f"{{{NS}}}baz", False, True, False
-        ),
-        make_ci(XmlDt2, child(rename="baz"), XmlDt2, "baz", False, True, False),
-        make_ci(
-            Optional[XmlDt1],
-            child(default=None),
-            XmlDt1,
-            f"{{{NS}}}bar",
-            False,
-            False,
-            True,
-        ),
-        make_ci(
-            Optional[XmlDt2], child(default=None), XmlDt2, "bar", False, False, True
-        ),
-        make_ci(List[XmlDt1], child(), XmlDt1, f"{{{NS}}}bar", True, True, False),
-        make_ci(List[XmlDt2], child(), XmlDt2, "bar", True, True, False),
-        make_ci(
-            Optional[List[XmlDt1]],
-            child(default=None),
-            XmlDt1,
-            f"{{{NS}}}bar",
-            True,
-            False,
-            True,
-        ),
-        make_ci(
-            Optional[List[XmlDt2]],
-            child(default=None),
-            XmlDt2,
-            "bar",
-            True,
-            False,
-            True,
-        ),
-    ],
-)
-def test_child_def_good_path(cls, info):
-    dt = xml_dataclass(cls)
-    assert not dt.__attributes__
-    assert not dt.__text_field__
-    assert len(dt.__children__) == 1
-    bar = dt.__children__[0]
-    assert bar == info
-
-
-@pytest.mark.parametrize("tp", [Dt1, str, Optional[str], List[str], int, Optional[int]])
-def test_child_def_bad_path(tp):
-    class Foo:
-        __ns__ = None
-        bar: tp = child()
-
-    with pytest.raises(ValueError) as exc_info:
-        xml_dataclass(Foo)
-
-    msg = str(exc_info.value)
-    assert "Invalid type" in msg
-    assert "'bar'" in msg
+        _check_str_type(f)
 
 
 def make_ai(tp_in, f, xml_name, is_req, is_opt):
@@ -186,7 +142,7 @@ def test_attr_def_good_path(cls, info):
     assert bar == info
 
 
-@pytest.mark.parametrize("tp", [int, Optional[int], Dt1, XmlDt1, List[XmlDt1]])
+@pytest.mark.parametrize("tp", INVALID_STR_TYPES)
 def test_attr_def_bad_path(tp):
     class Foo:
         __ns__ = None
@@ -220,7 +176,7 @@ def test_text_defs_good_path(cls, info):
     assert dt.__text_field__ == info
 
 
-@pytest.mark.parametrize("tp", [int, Optional[int], Dt1, XmlDt1, List[XmlDt1]])
+@pytest.mark.parametrize("tp", INVALID_STR_TYPES)
 def test_text_defs_bad_path(tp):
     class Foo:
         __ns__ = None
@@ -334,3 +290,81 @@ def test_xml_dataclass_attr_name_clash():
     assert "'spam'" in msg
     assert "'bar'" in msg
     assert "'baz'" in msg
+
+
+def uu(tp, tps, ns, is_opt, is_list):
+    return (MockField(tp), (tps, ns, is_opt, is_list))
+
+
+UNPACKED_UNION_GOOD = [
+    uu(XmlDt1, (XmlDt1,), NS, False, False),
+    uu(Optional[XmlDt1], (XmlDt1,), NS, True, False),
+    uu(XmlDt2, (XmlDt2,), None, False, False),
+    uu(Optional[XmlDt2], (XmlDt2,), None, True, False),
+    uu(List[XmlDt1], (XmlDt1,), NS, False, True),
+    uu(Optional[List[XmlDt1]], (XmlDt1,), NS, True, True),
+    uu(Union[XmlDt1, XmlDt3], (XmlDt1, XmlDt3,), NS, False, False),
+    uu(Union[XmlDt1, XmlDt3, None], (XmlDt1, XmlDt3,), NS, True, False),
+    uu(List[Union[XmlDt1, XmlDt3]], (XmlDt1, XmlDt3,), NS, False, True),
+    uu(Optional[List[Union[XmlDt1, XmlDt3]]], (XmlDt1, XmlDt3,), NS, True, True),
+]
+
+
+@pytest.mark.parametrize("f,expected", UNPACKED_UNION_GOOD)
+def test__unpack_union_type_good_path(f, expected):
+    e_tps, e_ns, e_opt, e_list = expected
+    a_tps, a_ns, a_opt, a_list = ChildInfo._unpack_union_type(f)
+    assert e_tps == a_tps, "Unpack union type"
+    assert e_ns == a_ns, "Unpack union namespace"
+    assert e_opt == a_opt, "Unpack union is optional"
+    assert e_list == a_list, "Unpack union is list"
+
+
+@pytest.mark.parametrize(
+    "tp", [int, str, object, Dt1, Dt1, List[Optional[XmlDt1]]],
+)
+def test__unpack_union_type_bad_path(tp):
+    f = MockField(tp)
+    with pytest.raises(ValueError) as exc_info:
+        ChildInfo._unpack_union_type(f)
+
+    msg = str(exc_info.value)
+    assert "child must be XML dataclass" in msg
+    assert repr(f.type) in msg
+
+
+def test__unpack_union_type_mismatch_ns():
+    f = MockField(Union[XmlDt1, XmlDt2])
+    with pytest.raises(ValueError) as exc_info:
+        ChildInfo._unpack_union_type(f)
+
+    msg = str(exc_info.value)
+    assert NS in msg
+
+
+def make_ci(tp_in, f, tp_out, xml_name, is_list, is_req, is_opt):
+    cls = make_xml_dt(tp_in, f)
+    return (cls, ChildInfo(f, "bar", xml_name, (tp_out,), is_list, is_req, is_opt))
+
+
+@pytest.mark.parametrize(
+    "cls,info",
+    [
+        make_ci(XmlDt1, child(), XmlDt1, f"{{{NS}}}bar", False, True, False),
+        make_ci(XmlDt2, child(), XmlDt2, "bar", False, True, False),
+        make_ci(
+            XmlDt1, child(rename="baz"), XmlDt1, f"{{{NS}}}baz", False, True, False
+        ),
+        make_ci(XmlDt2, child(rename="baz"), XmlDt2, "baz", False, True, False),
+        make_ci(
+            Optional[XmlDt2], child(default=None), XmlDt2, "bar", False, False, True
+        ),
+    ],
+)
+def test_child_def_good_path(cls, info):
+    dt = xml_dataclass(cls)
+    assert not dt.__attributes__
+    assert not dt.__text_field__
+    assert len(dt.__children__) == 1
+    bar = dt.__children__[0]
+    assert bar == info

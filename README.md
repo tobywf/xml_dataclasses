@@ -65,6 +65,19 @@ if __name__ == "__main__":
 * Lists of child elements are supported
 * Inheritance does work, but has the same limitations as dataclasses. Inheriting from base classes with required fields and declaring optional fields doesn't work due to field order. This isn't recommended
 * Namespace support is decent as long as correctly declared. I've tried on several real-world examples, although they were known to be valid. `lxml` does a great job at expanding namespace information when loading and simplifying it when saving
+* Union child types are supported. When loading XML, they are attempted to be parsed in order
+
+## Gotchas
+
+### Whitespace
+
+If you are able to, it is strongly recommended you strip whitespace from the input via `lxml`:
+
+```python
+parser = etree.XMLParser(remove_blank_text=True)
+```
+
+By default, `lxml` preserves whitespace. This can cause a problem when checking if elements have no text. The library does attempt to strip these; literally via Python's `strip()`. But `lxml` is likely faster and more robust.
 
 ## Limitations and Assumptions
 
@@ -77,8 +90,8 @@ Most of these limitations/assumptions are enforced. They may make this project u
 * It isn't possible to pass any parameters to the wrapped `@dataclass` decorator
 * Some properties of dataclass `field`s are not exposed: `default_factory`, `repr`, `hash`, `init`, `compare`. For most, it is because I don't understand the implications fully or how that would be useful for XML. `default_factory` is hard only because of [the overloaded type signatures](https://github.com/python/typeshed/blob/master/stdlib/3.7/dataclasses.pyi), and getting that to work with `mypy`
 * Deserialisation is strict; missing required attributes and child elements will cause an error. I want this to be the default behaviour, but it should be straightforward to add a parameter to `load` for lenient operation
-* Unions of types aren't yet supported
 * Dataclasses must be written by hand, no tools are provided to generate these from, DTDs, XML schema definitions, or RELAX NG schemas
+* Union types must have the same element/tag name and namespace. Otherwise, two different dataclass attributes (XML child fields) may be used
 
 ## Development
 

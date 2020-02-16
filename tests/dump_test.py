@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List, Optional, Union
 
 import pytest
 from lxml import etree
@@ -14,6 +14,18 @@ NSMAP = {None: NS}
 @xml_dataclass
 class Child:
     __ns__ = None
+
+
+@xml_dataclass
+class Child1:
+    __ns__ = None
+    spam: str = attr()
+
+
+@xml_dataclass
+class Child2:
+    __ns__ = None
+    wibble: str = attr()
 
 
 @pytest.mark.parametrize(
@@ -252,3 +264,83 @@ def test_dump_children_multiple_missing_default():
     # xml = etree.tostring(el, encoding="unicode")
     # assert xml == "<foo><bar/><bar/></foo>"
     pass
+
+
+def test_dump_children_union_present_required1():
+    @xml_dataclass
+    class Foo:
+        __ns__ = None
+        bar: Union[Child1, Child2] = child()
+
+    foo = Foo(bar=Child1(spam="eggs"))
+    el = dump(foo, "foo", None)
+    xml = etree.tostring(el, encoding="unicode")
+    assert xml == '<foo><bar spam="eggs"/></foo>'
+
+
+def test_dump_children_union_present_required2():
+    @xml_dataclass
+    class Foo:
+        __ns__ = None
+        bar: Union[Child1, Child2] = child()
+
+    foo = Foo(bar=Child2(wibble="wobble"))
+    el = dump(foo, "foo", None)
+    xml = etree.tostring(el, encoding="unicode")
+    assert xml == '<foo><bar wibble="wobble"/></foo>'
+
+
+UNION_OPTIONAL = [
+    Optional[Union[Child1, Child2]],
+    Union[Child1, Child2, None],
+]
+
+
+@pytest.mark.parametrize("tp", UNION_OPTIONAL)
+def test_dump_children_union_present_optional(tp):
+    @xml_dataclass
+    class Foo:
+        __ns__ = None
+        bar: tp = child(default=None)
+
+    foo = Foo(bar=Child1(spam="eggs"))
+    el = dump(foo, "foo", None)
+    xml = etree.tostring(el, encoding="unicode")
+    assert xml == '<foo><bar spam="eggs"/></foo>'
+
+
+@pytest.mark.parametrize("tp", UNION_OPTIONAL)
+def test_dump_children_union_missing_optional(tp):
+    @xml_dataclass
+    class Foo:
+        __ns__ = None
+        bar: tp = child(default=None)
+
+    foo = Foo()
+    el = dump(foo, "foo", None)
+    xml = etree.tostring(el, encoding="unicode")
+    assert xml == "<foo/>"
+
+
+def test_dump_children_union_missing_default():
+    @xml_dataclass
+    class Foo:
+        __ns__ = None
+        bar: Union[Child1, Child2] = child(default=Child1(spam="eggs"))
+
+    foo = Foo()
+    el = dump(foo, "foo", None)
+    xml = etree.tostring(el, encoding="unicode")
+    assert xml == '<foo><bar spam="eggs"/></foo>'
+
+
+def test_dump_children_union_multiple():
+    @xml_dataclass
+    class Foo:
+        __ns__ = None
+        bar: List[Union[Child1, Child2]] = child()
+
+    foo = Foo(bar=[Child1(spam="eggs"), Child2(wibble="wobble")])
+    el = dump(foo, "foo", None)
+    xml = etree.tostring(el, encoding="unicode")
+    assert xml == '<foo><bar spam="eggs"/><bar wibble="wobble"/></foo>'

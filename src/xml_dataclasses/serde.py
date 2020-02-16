@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Any, Dict, List, Mapping, Optional, Type, TypeVar
+from typing import Any, Dict, List, Mapping, Optional, Type, TypeVar, Union
 
 from lxml.builder import ElementMaker  # type: ignore
 
@@ -9,16 +9,6 @@ from .lxml_utils import strip_ns
 from .structs import ChildInfo, TextInfo, XmlDataclass, is_xml_dataclass
 
 _T = TypeVar("_T")
-
-
-def _unpack_child(info: ChildInfo[_T], value: Any, el_tag: str) -> Any:
-    if info.is_list:
-        return [load(info.base_type, v) for v in value]
-
-    if len(value) != 1:
-        raise ValueError(f"Multiple child elements '{info.xml_name}' in '{el_tag}'")
-
-    return load(info.base_type, value[0])
 
 
 def _load_attributes(cls: Type[XmlDataclass], el: Any) -> Mapping[str, str]:
@@ -62,6 +52,9 @@ def _load_text(info: TextInfo[Any], el: Any) -> Mapping[str, str]:
 
 
 def _load_children(cls: Type[XmlDataclass], el: Any) -> Mapping[str, XmlDataclass]:
+    if el.text and el.text.strip():
+        raise ValueError(f"Element '{el.tag}' has text (expected child elements only)")
+
     # child elements can be duplicated
     el_children: Dict[str, List[Any]] = defaultdict(list)
     for e in el.iterchildren():
@@ -70,16 +63,54 @@ def _load_children(cls: Type[XmlDataclass], el: Any) -> Mapping[str, XmlDataclas
     values = {}
     processed = set()
 
-    for child in cls.__children__:
+    def _unpack_union_child(
+        child: ChildInfo[Any], value: Any
+    ) -> Union[XmlDataclass, List[XmlDataclass]]:
+        exceptions = []
+        # try to find one matching type
+        for base_type in child.base_types:
+            try:
+                return load(base_type, value)
+            except ValueError as e:
+                exceptions.append(e)
+
+        raise ValueError(
+            f"Invalid child elements found for '{child.dt_name}' in '{el.tag}':\n"
+            + "\n".join(str(e) for e in exceptions)
+        )
+
+    def _get_one_child_value(child: ChildInfo[Any]) -> Any:
         # defaultdict can't raise KeyError
         if child.xml_name in el_children:
-            child_value = _unpack_child(child, el_children[child.xml_name], el.tag)
+            value = el_children[child.xml_name]
         else:
-            if child.is_required:
+            if not child.is_required:
+                return child.field.default
+
+            raise ValueError(
+                f"Required child element '{child.xml_name}' not found in '{el.tag}'"
+            )
+
+        if not child.is_list:
+            if len(value) != 1:
                 raise ValueError(
-                    f"Required child element '{child.xml_name}' not found in '{el.tag}'"
+                    f"Multiple child elements '{child.xml_name}' in '{el.tag}'"
                 )
-            child_value = child.field.default
+            value = value[0]
+
+        if len(child.base_types) == 1:
+            # nice path for default use-case
+            base_type = child.base_types[0]
+            if child.is_list:
+                return [load(base_type, v) for v in value]
+            return load(base_type, value)
+
+        if child.is_list:
+            return [_unpack_union_child(child, v) for v in value]
+        return _unpack_union_child(child, value)
+
+    for child in cls.__children__:
+        child_value = _get_one_child_value(child)
         processed.add(child.xml_name)
         values[child.dt_name] = child_value
 
