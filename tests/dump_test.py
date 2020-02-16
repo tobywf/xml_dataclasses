@@ -56,7 +56,7 @@ def test_dump_attributes_present_required():
 
     foo = Foo(bar="baz")
     el = dump(foo, "foo", None)
-    xml = etree.tounicode(el)
+    xml = etree.tostring(el, encoding="unicode")
     assert xml == '<foo bar="baz"/>'
 
 
@@ -68,7 +68,7 @@ def test_dump_attributes_present_optional():
 
     foo = Foo(bar="baz")
     el = dump(foo, "foo", None)
-    xml = etree.tounicode(el)
+    xml = etree.tostring(el, encoding="unicode")
     assert xml == '<foo bar="baz"/>'
 
 
@@ -80,7 +80,7 @@ def test_dump_attributes_missing_optional():
 
     foo = Foo()
     el = dump(foo, "foo", None)
-    xml = etree.tounicode(el)
+    xml = etree.tostring(el, encoding="unicode")
     assert xml == "<foo/>"
 
 
@@ -92,7 +92,7 @@ def test_dump_attributes_missing_default():
 
     foo = Foo()
     el = dump(foo, "foo", None)
-    xml = etree.tounicode(el)
+    xml = etree.tostring(el, encoding="unicode")
     assert xml == '<foo bar="baz"/>'
 
 
@@ -104,7 +104,7 @@ def test_dump_text_present_required():
 
     foo = Foo(value="bar")
     el = dump(foo, "foo", None)
-    xml = etree.tounicode(el)
+    xml = etree.tostring(el, encoding="unicode")
     assert xml == "<foo>bar</foo>"
 
 
@@ -116,7 +116,7 @@ def test_dump_text_present_optional():
 
     foo = Foo(value="bar")
     el = dump(foo, "foo", None)
-    xml = etree.tounicode(el)
+    xml = etree.tostring(el, encoding="unicode")
     assert xml == "<foo>bar</foo>"
 
 
@@ -128,7 +128,7 @@ def test_dump_text_missing_optional():
 
     foo = Foo()
     el = dump(foo, "foo", None)
-    xml = etree.tounicode(el)
+    xml = etree.tostring(el, encoding="unicode")
     assert xml == "<foo/>"
 
 
@@ -140,7 +140,7 @@ def test_dump_text_missing_default():
 
     foo = Foo()
     el = dump(foo, "foo", None)
-    xml = etree.tounicode(el)
+    xml = etree.tostring(el, encoding="unicode")
     assert xml == "<foo>bar</foo>"
 
 
@@ -152,7 +152,7 @@ def test_dump_children_single_present_required():
 
     foo = Foo(bar=Child())
     el = dump(foo, "foo", None)
-    xml = etree.tounicode(el)
+    xml = etree.tostring(el, encoding="unicode")
     assert xml == "<foo><bar/></foo>"
 
 
@@ -164,7 +164,7 @@ def test_dump_children_single_present_optional():
 
     foo = Foo(bar=Child())
     el = dump(foo, "foo", None)
-    xml = etree.tounicode(el)
+    xml = etree.tostring(el, encoding="unicode")
     assert xml == "<foo><bar/></foo>"
 
 
@@ -176,7 +176,7 @@ def test_dump_children_single_missing_optional():
 
     foo = Foo()
     el = dump(foo, "foo", None)
-    xml = etree.tounicode(el)
+    xml = etree.tostring(el, encoding="unicode")
     assert xml == "<foo/>"
 
 
@@ -188,7 +188,7 @@ def test_dump_children_single_missing_default():
 
     foo = Foo()
     el = dump(foo, "foo", None)
-    xml = etree.tounicode(el)
+    xml = etree.tostring(el, encoding="unicode")
     assert xml == "<foo><bar/></foo>"
 
 
@@ -200,7 +200,7 @@ def test_dump_children_multiple_present_required1():
 
     foo = Foo(bar=[Child()])
     el = dump(foo, "foo", None)
-    xml = etree.tounicode(el)
+    xml = etree.tostring(el, encoding="unicode")
     assert xml == "<foo><bar/></foo>"
 
 
@@ -212,7 +212,7 @@ def test_dump_children_multiple_present_required2():
 
     foo = Foo(bar=[Child(), Child()])
     el = dump(foo, "foo", None)
-    xml = etree.tounicode(el)
+    xml = etree.tostring(el, encoding="unicode")
     assert xml == "<foo><bar/><bar/></foo>"
 
 
@@ -224,7 +224,7 @@ def test_dump_children_multiple_present_optional():
 
     foo = Foo(bar=[Child(), Child()])
     el = dump(foo, "foo", None)
-    xml = etree.tounicode(el)
+    xml = etree.tostring(el, encoding="unicode")
     assert xml == "<foo><bar/><bar/></foo>"
 
 
@@ -236,7 +236,7 @@ def test_dump_children_multiple_missing_optional():
 
     foo = Foo()
     el = dump(foo, "foo", None)
-    xml = etree.tounicode(el)
+    xml = etree.tostring(el, encoding="unicode")
     assert xml == "<foo/>"
 
 
@@ -249,6 +249,6 @@ def test_dump_children_multiple_missing_default():
 
     # foo = Foo()
     # el = dump(foo, "foo", None)
-    # xml = etree.tounicode(el)
+    # xml = etree.tostring(el, encoding="unicode")
     # assert xml == "<foo><bar/><bar/></foo>"
     pass

@@ -1,8 +1,10 @@
 # XML dataclasses
 
-This is a very rough prototype of how a library might look like for (de)serialising XML into dataclasses. XML dataclasses build on normal dataclasses from the standard library and [`lxml`](https://pypi.org/project/lxml/) elements. Loading and saving these elements is left to the consumer for flexibility of the desired output.
+This is a very rough prototype of how a library might look like for (de)serialising XML into  Python dataclasses. XML dataclasses build on normal dataclasses from the standard library and [`lxml`](https://pypi.org/project/lxml/) elements. Loading and saving these elements is left to the consumer for flexibility of the desired output.
 
 It isn't ready for production if you aren't willing to do your own evaluation/quality assurance. I don't recommend using this library with untrusted content. It inherits all of `lxml`'s flaws with regards to XML attacks, and recursively resolves data structures. Because deserialisation is driven from the dataclass definitions, it shouldn't be possible to execute arbitrary Python code. But denial of service attacks would very likely be feasible.
+
+Requires Python 3.7 or higher.
 
 ## Example
 
@@ -42,6 +44,8 @@ class Container:
     __ns__ = CONTAINER_NS
     version: str = attr()
     rootfiles: RootFiles = child()
+    # WARNING: this is an incomplete implementation of an OPF container
+    # (it's missing links)
 
 
 if __name__ == "__main__":
@@ -49,7 +53,7 @@ if __name__ == "__main__":
     lxml_el_in = etree.parse("container.xml").getroot()
     container = load(Container, lxml_el_in, "container")
     lxml_el_out = dump(container, "container", nsmap)
-    print(etree.tounicode(lxml_el_out, pretty_print=True))
+    print(etree.tostring(lxml_el_out, encoding="unicode", pretty_print=True))
 ```
 
 ## Features
@@ -75,3 +79,35 @@ Most of these limitations/assumptions are enforced. They may make this project u
 * Deserialisation is strict; missing required attributes and child elements will cause an error
 * Unions of types aren't yet supported
 * Dataclasses must be written by hand, no tools are provided to generate these from, DTDs, XML schema definitions, or RELAX NG schemas
+
+## Development
+
+This project uses [pre-commit](https://pre-commit.com/) to run some linting hooks when committing. When you first clone the repo, please run:
+
+```
+pre-commit install
+```
+
+You may also run the hooks at any time:
+
+```
+pre-commit run --all-files
+```
+
+Dependencies are managed via [poetry](https://python-poetry.org/). To install all dependencies, use:
+
+```
+poetry install
+```
+
+This will also install development dependencies such as `black`, `isort`, `pylint`, `mypy`, and `pytest`. I've provided a simple script to run these during development called `lint`. You can either run it from a shell session with the poetry-installed virtual environment, or run as follows:
+
+```
+poetry run ./lint
+```
+
+Auto-formatters will be applied, and static analysis/tests are run in order. The script stops on failure to allow quick iteration.
+
+## License
+
+This library is licensed under the Mozilla Public License Version 2.0. For more information, see `LICENSE`.

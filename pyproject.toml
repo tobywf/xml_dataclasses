@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "xml_dataclasses"
-version = "0.0.1"
+version = "0.0.2"
 description = "(De)serialize XML documents into specially-annotated dataclasses"
 authors = ["Toby Fleming <tobywf@users.noreply.github.com>"]
 license = "MPL-2.0"
@@ -31,6 +31,7 @@ pytest-cov = "^2.8.1"
 mypy = "^0.761"
 ipython = "^7.12.0"
 coverage = {extras = ["toml"], version = "^5.0.3"}
+pytest-random-order = "^1.0.4"
 
 [tool.isort]
 # see https://black.readthedocs.io/en/stable/the_black_code_style.html
