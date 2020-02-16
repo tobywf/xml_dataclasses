@@ -14,9 +14,11 @@ disable=
     bad-continuation,  # clashes with black
     line-too-long,  # clashes with black
     ungrouped-imports, # clashes with isort
-    wrong-import-position, # clashes with isort
+    wrong-import-position,  # clashes with isort
     missing-docstring,
     fixme,
+    too-few-public-methods,  # this seems useless
+
 
 [BASIC]
 

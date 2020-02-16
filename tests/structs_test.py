@@ -302,3 +302,35 @@ def test_xml_dataclass_unknown_field():
     msg = str(exc_info.value)
     assert "Unknown XML field type" in msg
     assert "'object'" in msg
+
+
+def test_xml_dataclass_child_name_clash():
+    class Foo:
+        __ns__ = None
+        bar: XmlDt2 = child(rename="spam")
+        baz: XmlDt2 = child(rename="spam")
+
+    with pytest.raises(ValueError) as exc_info:
+        xml_dataclass(Foo)
+
+    msg = str(exc_info.value)
+    assert "Duplicate child" in msg
+    assert "'spam'" in msg
+    assert "'bar'" in msg
+    assert "'baz'" in msg
+
+
+def test_xml_dataclass_attr_name_clash():
+    class Foo:
+        __ns__ = None
+        bar: str = attr(rename="spam")
+        baz: str = attr(rename="spam")
+
+    with pytest.raises(ValueError) as exc_info:
+        xml_dataclass(Foo)
+
+    msg = str(exc_info.value)
+    assert "Duplicate attribute" in msg
+    assert "'spam'" in msg
+    assert "'bar'" in msg
+    assert "'baz'" in msg

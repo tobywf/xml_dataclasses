@@ -219,12 +219,29 @@ def text(
     return _xml_field(xml_type=XmlFieldType.Text, default=default, metadata=metadata)
 
 
-class XmlDataclass:  # pylint: disable=too-few-public-methods
+class XmlDataclass:
     __ns__: Optional[str]
     __attributes__: Collection[AttrInfo[Any]]
     __children__: Collection[ChildInfo[Any]]
     __text_field__: Optional[TextInfo[Any]]
     __nsmap__: Optional[Mapping[Optional[str], str]]
+
+
+class _XmlNameTracker:
+    def __init__(self, field_type: str):
+        self.field_type = field_type
+        self.seen: Dict[str, str] = {}
+
+    def add(self, xml_name: str, field_name: str) -> None:
+        try:
+            previous = self.seen[xml_name]
+        except KeyError:
+            self.seen[xml_name] = field_name
+        else:
+            raise ValueError(
+                f"Duplicate {self.field_type} '{xml_name}' on '{field_name}', "
+                f"previously declared on '{previous}'"
+            )
 
 
 def xml_dataclass(cls: Type[Any]) -> Type[XmlDataclass]:
@@ -239,6 +256,8 @@ def xml_dataclass(cls: Type[Any]) -> Type[XmlDataclass]:
     except AttributeError:
         new_cls.__nsmap__ = None
 
+    seen_attrs = _XmlNameTracker("attribute")
+    seen_children = _XmlNameTracker("child")
     attrs: List[AttrInfo[Any]] = []
     children: List[ChildInfo[Any]] = []
     text_field = None
@@ -249,9 +268,13 @@ def xml_dataclass(cls: Type[Any]) -> Type[XmlDataclass]:
             raise ValueError(f"Non-XML field '{f.name}' on XML dataclass") from None
 
         if xml_type == XmlFieldType.Attr:
-            attrs.append(AttrInfo.resolve(f))
+            attr_info = AttrInfo.resolve(f)
+            seen_attrs.add(attr_info.xml_name, f.name)
+            attrs.append(attr_info)
         elif xml_type == XmlFieldType.Child:
-            children.append(ChildInfo.resolve(f))
+            child_info = ChildInfo.resolve(f)
+            seen_children.add(child_info.xml_name, f.name)
+            children.append(child_info)
         elif xml_type == XmlFieldType.Text:
             text_field = TextInfo.resolve(f)
         else:

@@ -76,7 +76,7 @@ Most of these limitations/assumptions are enforced. They may make this project u
 * Text content is a string
 * It isn't possible to pass any parameters to the wrapped `@dataclass` decorator
 * Some properties of dataclass `field`s are not exposed: `default_factory`, `repr`, `hash`, `init`, `compare`. For most, it is because I don't understand the implications fully or how that would be useful for XML. `default_factory` is hard only because of [the overloaded type signatures](https://github.com/python/typeshed/blob/master/stdlib/3.7/dataclasses.pyi), and getting that to work with `mypy`
-* Deserialisation is strict; missing required attributes and child elements will cause an error
+* Deserialisation is strict; missing required attributes and child elements will cause an error. I want this to be the default behaviour, but it should be straightforward to add a parameter to `load` for lenient operation
 * Unions of types aren't yet supported
 * Dataclasses must be written by hand, no tools are provided to generate these from, DTDs, XML schema definitions, or RELAX NG schemas
 
