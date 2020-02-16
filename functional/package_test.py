@@ -4,7 +4,7 @@ from typing import List, Mapping, Optional, Union
 
 from lxml import etree
 
-from xml_dataclasses import attr, child, dump, load, text, xml_dataclass
+from xml_dataclasses import dump, load, rename, text, xml_dataclass
 
 from .utils import lmxl_dump
 
@@ -29,73 +29,73 @@ class NsMap(Enum):
 class DublinCoreMd:
     __ns__ = NsMap.dc.value
     value: str = text()
-    id: Optional[str] = attr(default=None)
+    id: Optional[str] = None
 
 
 @xml_dataclass
 class MdMeta3:
     __ns__ = NsMap.opf.value
 
-    property: str = attr()
+    property: str
     value: str = text()
 
 
 @xml_dataclass
 class MdMeta2:
     __ns__ = NsMap.opf.value
-    content: str = attr()
-    name: str = attr()
+    content: str
+    name: str
 
 
 @xml_dataclass
 class Metadata3:
     __ns__ = NsMap.opf.value
 
-    identifier: List[DublinCoreMd] = child()
-    title: List[DublinCoreMd] = child()
-    language: List[DublinCoreMd] = child()
-    meta: List[Union[MdMeta3, MdMeta2]] = child()
+    identifier: List[DublinCoreMd]
+    title: List[DublinCoreMd]
+    language: List[DublinCoreMd]
+    meta: List[Union[MdMeta3, MdMeta2]]
 
 
 @xml_dataclass
 class Item3:
     __ns__ = NsMap.opf.value
-    id: str = attr()
-    href: str = attr()
-    media_type: str = attr(rename="media-type")
+    id: str
+    href: str
+    media_type: str = rename(name="media-type")
 
 
 @xml_dataclass
 class Manifest3:
     __ns__ = NsMap.opf.value
-    item: List[Item3] = child()
+    item: List[Item3]
 
 
 @xml_dataclass
 class ItemRef3:
     __ns__ = NsMap.opf.value
-    idref: str = attr()
-    properties: Optional[str] = attr(default=None)
+    idref: str
+    properties: Optional[str] = None
 
 
 @xml_dataclass
 class Spine3:
     __ns__ = NsMap.opf.value
-    itemref: List[ItemRef3] = child()
-    toc: Optional[str] = attr(default=None)
+    itemref: List[ItemRef3]
+    toc: Optional[str] = None
 
 
 @xml_dataclass
 class Package3:
     __ns__ = NsMap.opf.value
-    version: str = attr()
-    unique_identifier: str = attr(rename="unique-identifier")
-    metadata: Metadata3 = child()
-    manifest: Manifest3 = child()
-    spine: Spine3 = child()
-    id: Optional[str] = attr(default=None)
-    lang: Optional[str] = attr(default=None, namespace=NsMap.xml.value)
-    dir: Optional[str] = attr(default=None)
+    version: str
+    unique_identifier: str = rename(name="unique-identifier")
+    metadata: Metadata3
+    manifest: Manifest3
+    spine: Spine3
+    id: Optional[str] = None
+    lang: Optional[str] = rename(default=None, ns=NsMap.xml.value)
+    dir: Optional[str] = None
 
 
 def test_functional_package():

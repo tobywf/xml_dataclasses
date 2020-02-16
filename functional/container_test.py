@@ -1,9 +1,10 @@
 from pathlib import Path
 from typing import List
+
 import pytest
 from lxml import etree
 
-from xml_dataclasses import attr, child, dump, load, xml_dataclass
+from xml_dataclasses import dump, load, rename, xml_dataclass
 
 from .utils import lmxl_dump
 
@@ -15,21 +16,21 @@ CONTAINER_NS = "urn:oasis:names:tc:opendocument:xmlns:container"
 @xml_dataclass
 class RootFile:
     __ns__ = CONTAINER_NS
-    full_path: str = attr(rename="full-path")
-    media_type: str = attr(rename="media-type")
+    full_path: str = rename(name="full-path")
+    media_type: str = rename(name="media-type")
 
 
 @xml_dataclass
 class RootFiles:
     __ns__ = CONTAINER_NS
-    rootfile: List[RootFile] = child()
+    rootfile: List[RootFile]
 
 
 @xml_dataclass
 class Container:
     __ns__ = CONTAINER_NS
-    version: str = attr()
-    rootfiles: RootFiles = child()
+    version: str
+    rootfiles: RootFiles
     # WARNING: this is an incomplete implementation of an OPF container
     # (it's missing links)
 

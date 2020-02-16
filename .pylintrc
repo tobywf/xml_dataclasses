@@ -22,7 +22,7 @@ disable=
 
 [BASIC]
 
-good-names=_,e,el,ex,f,tp,v
+good-names=_,e,el,ex,f,tp,k,v,ns
 
 [FORMAT]
 

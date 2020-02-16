@@ -22,30 +22,29 @@ Requires Python 3.7 or higher.
 ```python
 from lxml import etree
 from typing import List
-from xml_dataclasses import xml_dataclass, attr, child, load, dump
+from xml_dataclasses import xml_dataclass, rename, load, dump
 
 CONTAINER_NS = "urn:oasis:names:tc:opendocument:xmlns:container"
 
 @xml_dataclass
 class RootFile:
     __ns__ = CONTAINER_NS
-    full_path: str = attr(rename="full-path")
-    media_type: str = attr(rename="media-type")
+    full_path: str = rename(name="full-path")
+    media_type: str = rename(name="media-type")
 
 
 @xml_dataclass
 class RootFiles:
     __ns__ = CONTAINER_NS
-    rootfile: List[RootFile] = child()
+    rootfile: List[RootFile]
 
 
 @xml_dataclass
 class Container:
     __ns__ = CONTAINER_NS
-    version: str = attr()
-    rootfiles: RootFiles = child()
+    version: str
+    rootfiles: RootFiles
     # WARNING: this is an incomplete implementation of an OPF container
-    # (it's missing links)
 
 
 if __name__ == "__main__":
@@ -62,10 +61,61 @@ if __name__ == "__main__":
 * Convert XML documents to well-defined dataclasses, which should work with IDE auto-completion
 * Loading and dumping of attributes, child elements, and text content
 * Required and optional attributes and child elements
-* Lists of child elements are supported
+* Lists of child elements are supported, as are unions and lists or unions
 * Inheritance does work, but has the same limitations as dataclasses. Inheriting from base classes with required fields and declaring optional fields doesn't work due to field order. This isn't recommended
 * Namespace support is decent as long as correctly declared. I've tried on several real-world examples, although they were known to be valid. `lxml` does a great job at expanding namespace information when loading and simplifying it when saving
-* Union child types are supported. When loading XML, they are attempted to be parsed in order
+
+## Patterns
+
+### Defining attributes
+
+Attributes can be either `str` or `Optional[str]`. Using any other type won't work. Attributes can be renamed or have their namespace modified via the `rename` function. It can be used either on its own, or with an existing field definition:
+
+```python
+@xml_dataclass
+class Foo:
+    __ns__ = None
+    required: str
+    optional: Optional[str] = None
+    renamed_with_default: str = rename(default=None, name="renamed-with-default")
+    namespaced: str = rename(ns="http://www.w3.org/XML/1998/namespace")
+    existing_field: str = rename(field(...), name="existing-field")
+```
+
+I would like to add support for validation in future, which might also make it easier to support other types. For now, you can work around this limitation with properties that do the conversion.
+
+### Defining text
+
+Like attributes, text can be either `str` or `Optional[str]`. You must declare text content with the `text` function. Similar to `rename`, this function can use an existing field definition, or take the `default` argument. Text cannot be renamed or namespaced. Every class can only have one field defining text content. If a class has text content, it cannot have any children.
+
+```python
+@xml_dataclass
+class Foo:
+    __ns__ = None
+    value: str = text()
+
+@xml_dataclass
+class Foo:
+    __ns__ = None
+    content: Optional[str] = text(default=None)
+
+@xml_dataclass
+class Foo:
+    __ns__ = None
+    uuid: str = text(field(default_factory=lambda: str(uuid4())))
+```
+
+### Defining children/child elements
+
+Children must ultimately be other XML dataclasses. However, they can also be `Optional`, `List`, and `Union` types:
+
+* `Optional` must be at the top level. Valid: `Optional[List[XmlDataclass]]`. Invalid: `List[Optional[XmlDataclass]]`
+* Next, `List` should be defined (if multiple child elements are allowed). Valid: `List[Union[XmlDataclass1, XmlDataclass2]]`. Invalid: `Union[List[XmlDataclass1], XmlDataclass2]`
+* Finally, if `Optional` or `List` were used, a union type should be the inner-most (again, if needed)
+
+Children can be renamed via the `rename` function, however attempting to set a namespace is invalid, since the namespace is provided by the child type's XML dataclass. Also, unions of XML dataclasses must have the same namespace (you can use different fields if they have different namespaces).
+
+If a class has children, it cannot have text content.
 
 ## Gotchas
 
@@ -79,19 +129,24 @@ parser = etree.XMLParser(remove_blank_text=True)
 
 By default, `lxml` preserves whitespace. This can cause a problem when checking if elements have no text. The library does attempt to strip these; literally via Python's `strip()`. But `lxml` is likely faster and more robust.
 
-## Limitations and Assumptions
+### Optional vs required
+
+On dataclasses, optional fields also usually have a default value to be useful. But this isn't required; `Optional` is just a type hint to say `None` is allowed.
+
+For XML dataclasses, on loading/deserialisation, whether or not a field is required is determined by if it has a `default`/`default_factory` defined. If so, and it's missing, that default is used. Otherwise, an error is raised.
+
+For dumping/serialisation, the default isn't considered. Instead, if a value is marked as `Optional` and the value is `None`, it isn't written.
+
+This makes sense in many cases, but possibly not every case.
+
+### Other limitations and Assumptions
 
 Most of these limitations/assumptions are enforced. They may make this project unsuitable for your use-case.
 
-* All attributes are strings, no extra validation is performed. I would like to add support for validation in future, which might also make it easier to support other types
-* Elements can either have child elements or text content, not both
-* Child elements are other XML dataclasses
-* Text content is a string
 * It isn't possible to pass any parameters to the wrapped `@dataclass` decorator
-* Some properties of dataclass `field`s are not exposed: `default_factory`, `repr`, `hash`, `init`, `compare`. For most, it is because I don't understand the implications fully or how that would be useful for XML. `default_factory` is hard only because of [the overloaded type signatures](https://github.com/python/typeshed/blob/master/stdlib/3.7/dataclasses.pyi), and getting that to work with `mypy`
+* Setting the `init` parameter of a dataclass' `field` will lead to bad things happening, this isn't supported
 * Deserialisation is strict; missing required attributes and child elements will cause an error. I want this to be the default behaviour, but it should be straightforward to add a parameter to `load` for lenient operation
 * Dataclasses must be written by hand, no tools are provided to generate these from, DTDs, XML schema definitions, or RELAX NG schemas
-* Union types must have the same element/tag name and namespace. Otherwise, two different dataclass attributes (XML child fields) may be used
 
 ## Development
 

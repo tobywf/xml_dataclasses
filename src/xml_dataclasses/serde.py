@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Mapping, Optional, Type, TypeVar, Union
 from lxml.builder import ElementMaker  # type: ignore
 
 from .lxml_utils import strip_ns
-from .structs import ChildInfo, TextInfo, XmlDataclass, is_xml_dataclass
+from .resolve_types import ChildInfo, TextInfo, XmlDataclass, is_xml_dataclass
 
 _T = TypeVar("_T")
 
@@ -25,7 +25,7 @@ def _load_attributes(cls: Type[XmlDataclass], el: Any) -> Mapping[str, str]:
                 raise ValueError(
                     f"Required attribute '{attr.xml_name}' not found on '{el.tag}'"
                 )
-            attr_value = attr.field.default
+            attr_value = attr.get_default()
         processed.add(attr.xml_name)
         values[attr.dt_name] = attr_value
 
@@ -37,7 +37,7 @@ def _load_attributes(cls: Type[XmlDataclass], el: Any) -> Mapping[str, str]:
     return values
 
 
-def _load_text(info: TextInfo[Any], el: Any) -> Mapping[str, str]:
+def _load_text(info: TextInfo, el: Any) -> Mapping[str, str]:
     has_child = next(el.iterchildren(), None) is not None
     if has_child:
         raise ValueError(f"Element '{el.tag}' has child elements (expected text only)")
@@ -46,7 +46,7 @@ def _load_text(info: TextInfo[Any], el: Any) -> Mapping[str, str]:
     if text is None:
         if info.is_required:
             raise ValueError(f"Element '{el.tag}' has no text")
-        text = info.field.default
+        text = info.get_default()
 
     return {info.dt_name: text}
 
@@ -64,7 +64,7 @@ def _load_children(cls: Type[XmlDataclass], el: Any) -> Mapping[str, XmlDataclas
     processed = set()
 
     def _unpack_union_child(
-        child: ChildInfo[Any], value: Any
+        child: ChildInfo, value: Any
     ) -> Union[XmlDataclass, List[XmlDataclass]]:
         exceptions = []
         # try to find one matching type
@@ -79,13 +79,13 @@ def _load_children(cls: Type[XmlDataclass], el: Any) -> Mapping[str, XmlDataclas
             + "\n".join(str(e) for e in exceptions)
         )
 
-    def _get_one_child_value(child: ChildInfo[Any]) -> Any:
+    def _get_one_child_value(child: ChildInfo) -> Any:
         # defaultdict can't raise KeyError
         if child.xml_name in el_children:
             value = el_children[child.xml_name]
         else:
             if not child.is_required:
-                return child.field.default
+                return child.get_default()
 
             raise ValueError(
                 f"Required child element '{child.xml_name}' not found in '{el.tag}'"

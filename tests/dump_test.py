@@ -1,11 +1,11 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List, Optional, Union
 
 import pytest
 from lxml import etree
 
 # test public exports
-from xml_dataclasses import attr, child, dump, text, xml_dataclass
+from xml_dataclasses import dump, text, xml_dataclass
 
 NS = "https://tobywf.com"
 NSMAP = {None: NS}
@@ -19,13 +19,13 @@ class Child:
 @xml_dataclass
 class Child1:
     __ns__ = None
-    spam: str = attr()
+    spam: str
 
 
 @xml_dataclass
 class Child2:
     __ns__ = None
-    wibble: str = attr()
+    wibble: str
 
 
 @pytest.mark.parametrize(
@@ -64,7 +64,7 @@ def test_dump_attributes_present_required():
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: str = attr()
+        bar: str
 
     foo = Foo(bar="baz")
     el = dump(foo, "foo", None)
@@ -76,7 +76,7 @@ def test_dump_attributes_present_optional():
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: Optional[str] = attr(default=None)
+        bar: Optional[str] = None
 
     foo = Foo(bar="baz")
     el = dump(foo, "foo", None)
@@ -88,7 +88,7 @@ def test_dump_attributes_missing_optional():
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: Optional[str] = attr(default=None)
+        bar: Optional[str] = None
 
     foo = Foo()
     el = dump(foo, "foo", None)
@@ -100,7 +100,7 @@ def test_dump_attributes_missing_default():
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: str = attr(default="baz")
+        bar: str = field(default="baz")
 
     foo = Foo()
     el = dump(foo, "foo", None)
@@ -160,7 +160,7 @@ def test_dump_children_single_present_required():
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: Child = child()
+        bar: Child
 
     foo = Foo(bar=Child())
     el = dump(foo, "foo", None)
@@ -172,7 +172,7 @@ def test_dump_children_single_present_optional():
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: Optional[Child] = child(default=None)
+        bar: Optional[Child] = None
 
     foo = Foo(bar=Child())
     el = dump(foo, "foo", None)
@@ -184,7 +184,7 @@ def test_dump_children_single_missing_optional():
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: Optional[Child] = child(default=None)
+        bar: Optional[Child] = None
 
     foo = Foo()
     el = dump(foo, "foo", None)
@@ -196,7 +196,7 @@ def test_dump_children_single_missing_default():
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: Child = child(default=Child())
+        bar: Child = Child()
 
     foo = Foo()
     el = dump(foo, "foo", None)
@@ -208,7 +208,7 @@ def test_dump_children_multiple_present_required1():
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: List[Child] = child()
+        bar: List[Child]
 
     foo = Foo(bar=[Child()])
     el = dump(foo, "foo", None)
@@ -220,7 +220,7 @@ def test_dump_children_multiple_present_required2():
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: List[Child] = child()
+        bar: List[Child]
 
     foo = Foo(bar=[Child(), Child()])
     el = dump(foo, "foo", None)
@@ -232,7 +232,7 @@ def test_dump_children_multiple_present_optional():
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: Optional[List[Child]] = child(default=None)
+        bar: Optional[List[Child]] = None
 
     foo = Foo(bar=[Child(), Child()])
     el = dump(foo, "foo", None)
@@ -244,7 +244,7 @@ def test_dump_children_multiple_missing_optional():
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: Optional[List[Child]] = child(default=None)
+        bar: Optional[List[Child]] = None
 
     foo = Foo()
     el = dump(foo, "foo", None)
@@ -253,24 +253,22 @@ def test_dump_children_multiple_missing_optional():
 
 
 def test_dump_children_multiple_missing_default():
-    # Can't do this without default_factory
-    # @xml_dataclass
-    # class Foo:
-    #     __ns__ = None
-    #     bar: List[Child] = child(default=[Child(), Child()])
+    @xml_dataclass
+    class Foo:
+        __ns__ = None
+        bar: List[Child] = field(default_factory=lambda: [Child(), Child()])
 
-    # foo = Foo()
-    # el = dump(foo, "foo", None)
-    # xml = etree.tostring(el, encoding="unicode")
-    # assert xml == "<foo><bar/><bar/></foo>"
-    pass
+    foo = Foo()
+    el = dump(foo, "foo", None)
+    xml = etree.tostring(el, encoding="unicode")
+    assert xml == "<foo><bar/><bar/></foo>"
 
 
 def test_dump_children_union_present_required1():
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: Union[Child1, Child2] = child()
+        bar: Union[Child1, Child2]
 
     foo = Foo(bar=Child1(spam="eggs"))
     el = dump(foo, "foo", None)
@@ -282,7 +280,7 @@ def test_dump_children_union_present_required2():
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: Union[Child1, Child2] = child()
+        bar: Union[Child1, Child2]
 
     foo = Foo(bar=Child2(wibble="wobble"))
     el = dump(foo, "foo", None)
@@ -301,7 +299,7 @@ def test_dump_children_union_present_optional(tp):
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: tp = child(default=None)
+        bar: tp = None
 
     foo = Foo(bar=Child1(spam="eggs"))
     el = dump(foo, "foo", None)
@@ -314,7 +312,7 @@ def test_dump_children_union_missing_optional(tp):
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: tp = child(default=None)
+        bar: tp = None
 
     foo = Foo()
     el = dump(foo, "foo", None)
@@ -326,7 +324,7 @@ def test_dump_children_union_missing_default():
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: Union[Child1, Child2] = child(default=Child1(spam="eggs"))
+        bar: Union[Child1, Child2] = Child1(spam="eggs")
 
     foo = Foo()
     el = dump(foo, "foo", None)
@@ -338,7 +336,7 @@ def test_dump_children_union_multiple():
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: List[Union[Child1, Child2]] = child()
+        bar: List[Union[Child1, Child2]]
 
     foo = Foo(bar=[Child1(spam="eggs"), Child2(wibble="wobble")])
     el = dump(foo, "foo", None)

@@ -1,11 +1,11 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List, Optional, Union
 
 import pytest
 from lxml import etree
 
 # test public exports
-from xml_dataclasses import attr, child, load, text, xml_dataclass
+from xml_dataclasses import load, text, xml_dataclass
 
 NS = "https://tobywf.com"
 
@@ -13,13 +13,13 @@ NS = "https://tobywf.com"
 @xml_dataclass
 class Child1:
     __ns__ = None
-    spam: str = attr()
+    spam: str
 
 
 @xml_dataclass
 class Child2:
     __ns__ = None
-    wibble: str = attr()
+    wibble: str
 
 
 @pytest.mark.parametrize(
@@ -78,7 +78,7 @@ def test_load_attributes_present_required():
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: str = attr()
+        bar: str
 
     el = etree.fromstring('<foo bar="baz" />')
     foo = load(Foo, el, "foo")
@@ -89,7 +89,7 @@ def test_load_attributes_present_optional():
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: Optional[str] = attr(default=None)
+        bar: Optional[str] = None
 
     el = etree.fromstring('<foo bar="baz" />')
     foo = load(Foo, el, "foo")
@@ -100,7 +100,7 @@ def test_load_attributes_missing_required():
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: str = attr()
+        bar: str
 
     el = etree.fromstring("<foo />")
     with pytest.raises(ValueError) as exc_info:
@@ -116,7 +116,7 @@ def test_load_attributes_missing_optional():
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: Optional[str] = attr(default=None)
+        bar: Optional[str] = None
 
     el = etree.fromstring("<foo />")
     foo = load(Foo, el, "foo")
@@ -127,7 +127,7 @@ def test_load_attributes_missing_default():
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: str = attr(default="baz")
+        bar: str = "baz"
 
     el = etree.fromstring("<foo />")
     foo = load(Foo, el, "foo")
@@ -229,7 +229,7 @@ def test_load_children_has_text(xml):
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: Child1 = child()
+        bar: Child1
 
     el = etree.fromstring(xml)
     with pytest.raises(ValueError) as exc_info:
@@ -244,7 +244,7 @@ def test_load_children_single_present_required():
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: Child1 = child()
+        bar: Child1
 
     el = etree.fromstring('<foo><bar spam="eggs" /></foo>')
     foo = load(Foo, el, "foo")
@@ -255,7 +255,7 @@ def test_load_children_single_present_optional():
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: Optional[Child1] = child(default=None)
+        bar: Optional[Child1] = None
 
     el = etree.fromstring('<foo><bar spam="eggs" /></foo>')
     foo = load(Foo, el, "foo")
@@ -266,7 +266,7 @@ def test_load_children_single_missing_required():
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: Child1 = child()
+        bar: Child1
 
     el = etree.fromstring("<foo />")
     with pytest.raises(ValueError) as exc_info:
@@ -282,7 +282,7 @@ def test_load_children_single_missing_optional():
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: Optional[Child1] = child(default=None)
+        bar: Optional[Child1] = None
 
     el = etree.fromstring("<foo />")
     foo = load(Foo, el, "foo")
@@ -308,7 +308,7 @@ def test_load_children_single_multiple_els():
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: Child1 = child()
+        bar: Child1
 
     el = etree.fromstring("<foo><bar /><bar /></foo>")
     with pytest.raises(ValueError) as exc_info:
@@ -324,7 +324,7 @@ def test_load_children_single_missing_default():
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: Child1 = child(default=Child1(spam="eggs"))
+        bar: Child1 = Child1(spam="eggs")
 
     el = etree.fromstring("<foo />")
     foo = load(Foo, el, "foo")
@@ -335,7 +335,7 @@ def test_load_children_multiple_present_required1():
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: List[Child1] = child()
+        bar: List[Child1]
 
     el = etree.fromstring('<foo><bar spam="eggs" /></foo>')
     foo = load(Foo, el, "foo")
@@ -347,7 +347,7 @@ def test_load_children_multiple_present_required2():
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: List[Child1] = child()
+        bar: List[Child1]
 
     el = etree.fromstring('<foo><bar spam="eggs" /><bar spam="ham" /></foo>')
     foo = load(Foo, el, "foo")
@@ -360,7 +360,7 @@ def test_load_children_multiple_present_optional():
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: Optional[List[Child1]] = child(default=None)
+        bar: Optional[List[Child1]] = None
 
     el = etree.fromstring('<foo><bar spam="eggs" /></foo>')
     foo = load(Foo, el, "foo")
@@ -372,7 +372,7 @@ def test_load_children_multiple_missing_required():
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: List[Child1] = child()
+        bar: List[Child1]
 
     el = etree.fromstring("<foo />")
     with pytest.raises(ValueError) as exc_info:
@@ -388,7 +388,7 @@ def test_load_children_multiple_missing_optional():
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: Optional[List[Child1]] = child(default=None)
+        bar: Optional[List[Child1]] = None
 
     el = etree.fromstring("<foo />")
     foo = load(Foo, el, "foo")
@@ -396,24 +396,22 @@ def test_load_children_multiple_missing_optional():
 
 
 def test_load_children_multiple_missing_default():
-    # Can't do this without default_factory
-    # @xml_dataclass
-    # class Foo:
-    #     __ns__ = None
-    #     bar: List[Child1] = child(default=[Child1(spam="eggs")])
+    @xml_dataclass
+    class Foo:
+        __ns__ = None
+        bar: List[Child1] = field(default_factory=lambda: [Child1(spam="eggs")])
 
-    # el = etree.fromstring("<foo />")
-    # foo = load(Foo, el, "foo")
-    # assert len(foo.bar) == 1
-    # assert foo.bar[0].spam == "eggs"
-    pass
+    el = etree.fromstring("<foo />")
+    foo = load(Foo, el, "foo")
+    assert len(foo.bar) == 1
+    assert foo.bar[0].spam == "eggs"
 
 
 def test_load_children_union_present_required1():
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: Union[Child1, Child2] = child()
+        bar: Union[Child1, Child2]
 
     el = etree.fromstring('<foo><bar spam="eggs" /></foo>')
     foo = load(Foo, el, "foo")
@@ -425,7 +423,7 @@ def test_load_children_union_present_required2():
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: Union[Child1, Child2] = child()
+        bar: Union[Child1, Child2]
 
     el = etree.fromstring('<foo><bar wibble="wobble" /></foo>')
     foo = load(Foo, el, "foo")
@@ -437,7 +435,7 @@ def test_load_children_union_overrepresented():
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: Union[Child1, Child2] = child()
+        bar: Union[Child1, Child2]
 
     el = etree.fromstring('<foo><bar spam="eggs" /><bar wibble="wobble" /></foo>')
 
@@ -454,7 +452,7 @@ def test_load_children_union_invalid():
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: Union[Child1, Child2] = child()
+        bar: Union[Child1, Child2]
 
     el = etree.fromstring('<foo><bar qux="eggs" /></foo>')
 
@@ -471,7 +469,7 @@ def test_load_children_union_multiple():
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: List[Union[Child1, Child2]] = child()
+        bar: List[Union[Child1, Child2]]
 
     el = etree.fromstring('<foo><bar spam="eggs" /><bar wibble="wobble" /></foo>')
 
@@ -487,7 +485,7 @@ def test_load_children_union_present_optional():
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: Optional[Union[Child1, Child2]] = child(default=None)
+        bar: Optional[Union[Child1, Child2]] = None
 
     el = etree.fromstring('<foo><bar spam="eggs" /></foo>')
     foo = load(Foo, el, "foo")
@@ -499,7 +497,7 @@ def test_load_children_union_missing_required():
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: Union[Child1, Child2] = child()
+        bar: Union[Child1, Child2]
 
     el = etree.fromstring("<foo />")
     with pytest.raises(ValueError) as exc_info:
@@ -515,7 +513,7 @@ def test_load_children_union_missing_optional():
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: Optional[Union[Child1, Child2]] = child(default=None)
+        bar: Optional[Union[Child1, Child2]] = None
 
     el = etree.fromstring("<foo />")
     foo = load(Foo, el, "foo")
@@ -526,7 +524,7 @@ def test_load_children_union_missing_default():
     @xml_dataclass
     class Foo:
         __ns__ = None
-        bar: Union[Child1, Child2] = child(default=Child1(spam="eggs"))
+        bar: Union[Child1, Child2] = Child1(spam="eggs")
 
     el = etree.fromstring("<foo />")
     foo = load(Foo, el, "foo")

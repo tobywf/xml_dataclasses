@@ -16,7 +16,7 @@ black $BLACK_CHECK src/ tests/ functional/
 mypy src/xml_dataclasses/ --strict
 pylint src/
 # always output coverage report
-if pytest tests/ --cov=xml_dataclasses --random-order $PYTEST_DEBUG; then
+if pytest tests/ --cov=xml_dataclasses --cov-report term --cov-report html --random-order $PYTEST_DEBUG; then
   coverage html
 else
   coverage html
