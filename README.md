@@ -1,6 +1,8 @@
 # XML dataclasses
 
-This is a very rough prototype of how a library might look like for (de)serialising XML into  Python dataclasses. XML dataclasses build on normal dataclasses from the standard library and [`lxml`](https://pypi.org/project/lxml/) elements. Loading and saving these elements is left to the consumer for flexibility of the desired output.
+[![License: MPL 2.0](https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg)](https://opensource.org/licenses/MPL-2.0)
+
+This is a prototype of how a library might look like for (de)serialising XML into  Python dataclasses. XML dataclasses build on normal dataclasses from the standard library and [`lxml`](https://pypi.org/project/lxml/) elements. Loading and saving these elements is left to the consumer for flexibility of the desired output.
 
 It isn't ready for production if you aren't willing to do your own evaluation/quality assurance. I don't recommend using this library with untrusted content. It inherits all of `lxml`'s flaws with regards to XML attacks, and recursively resolves data structures. Because deserialisation is driven from the dataclass definitions, it shouldn't be possible to execute arbitrary Python code. But denial of service attacks would very likely be feasible.
 
@@ -46,10 +48,16 @@ class Container:
     rootfiles: RootFiles
     # WARNING: this is an incomplete implementation of an OPF container
 
+    def xml_validate(self):
+        if self.version != "1.0":
+            raise ValueError(f"Unknown container version '{self.version}'")
+
 
 if __name__ == "__main__":
     nsmap = {None: CONTAINER_NS}
-    lxml_el_in = etree.parse("container.xml").getroot()
+    # see Gotchas, stripping whitespace is highly recommended
+    parser = etree.XMLParser(remove_blank_text=True)
+    lxml_el_in = etree.parse("container.xml", parser).getroot()
     container = load(Container, lxml_el_in, "container")
     lxml_el_out = dump(container, "container", nsmap)
     print(etree.tostring(lxml_el_out, encoding="unicode", pretty_print=True))
@@ -64,6 +72,7 @@ if __name__ == "__main__":
 * Lists of child elements are supported, as are unions and lists or unions
 * Inheritance does work, but has the same limitations as dataclasses. Inheriting from base classes with required fields and declaring optional fields doesn't work due to field order. This isn't recommended
 * Namespace support is decent as long as correctly declared. I've tried on several real-world examples, although they were known to be valid. `lxml` does a great job at expanding namespace information when loading and simplifying it when saving
+* Post-load validation hook `xml_validate`
 
 ## Patterns
 
@@ -116,6 +125,17 @@ Children must ultimately be other XML dataclasses. However, they can also be `Op
 Children can be renamed via the `rename` function, however attempting to set a namespace is invalid, since the namespace is provided by the child type's XML dataclass. Also, unions of XML dataclasses must have the same namespace (you can use different fields if they have different namespaces).
 
 If a class has children, it cannot have text content.
+
+### Defining post-load validation
+
+Simply implement an instance method called `xml_validate` with no parameters, and no return value (if you're using type hints):
+
+```python
+def xml_validate(self) -> None:
+    pass
+```
+
+If defined, the `load` function will call it after all values have been loaded and assigned to the XML dataclass. You can validate the fields you want inside this method. Return values are ignored; instead raise and catch exceptions.
 
 ## Gotchas
 

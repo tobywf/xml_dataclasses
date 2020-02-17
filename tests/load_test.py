@@ -530,3 +530,21 @@ def test_load_children_union_missing_default():
     foo = load(Foo, el, "foo")
     assert isinstance(foo.bar, Child1)
     assert foo.bar.spam == "eggs"
+
+
+def test_load_with_validation():
+    class MyError(Exception):
+        pass
+
+    @xml_dataclass
+    class Foo:
+        __ns__ = None
+        bar: str
+
+        def xml_validate(self) -> None:
+            if self.bar == "baz":
+                raise MyError()
+
+    el = etree.fromstring('<foo bar="baz" />')
+    with pytest.raises(MyError):
+        load(Foo, el, "foo")

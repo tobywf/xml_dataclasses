@@ -153,6 +153,14 @@ def load(cls: Type[XmlDataclass], el: Any, name: Optional[str] = None) -> XmlDat
 
     instance = cls(**attr_values, **text_values, **child_values)  # type: ignore
     instance.__nsmap__ = el.nsmap
+
+    try:
+        validate_fn = instance.xml_validate  # type: ignore
+    except AttributeError:
+        pass
+    else:
+        validate_fn()
+
     return instance
 
 

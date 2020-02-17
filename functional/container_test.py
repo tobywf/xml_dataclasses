@@ -32,7 +32,10 @@ class Container:
     version: str
     rootfiles: RootFiles
     # WARNING: this is an incomplete implementation of an OPF container
-    # (it's missing links)
+
+    def xml_validate(self):
+        if self.version != "1.0":
+            raise ValueError(f"Unknown container version '{self.version}'")
 
 
 @pytest.mark.parametrize("remove_blank_text", [True, False])
