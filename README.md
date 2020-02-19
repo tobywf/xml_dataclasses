@@ -4,7 +4,7 @@
 
 This library enables (de)serialising XML into Python dataclasses. XML dataclasses build on normal dataclasses from the standard library and [`lxml`](https://pypi.org/project/lxml/) elements. Loading and saving these elements is left to the consumer for flexibility of the desired output.
 
-It's currently in beta. It isn't ready for production if you aren't willing to do your own evaluation/quality assurance. I don't recommend using this library with untrusted content. It inherits all of `lxml`'s flaws with regards to XML attacks, and recursively resolves data structures. Because deserialisation is driven from the dataclass definitions, it shouldn't be possible to execute arbitrary Python code (not a guarantee, see license). Denial of service attacks would very likely be feasible. One workaround may be to [use `lxml` to validate](https://lxml.de/validation.html) untrusted content with a strict schema.
+It's currently in alpha. It isn't ready for production if you aren't willing to do your own evaluation/quality assurance. I don't recommend using this library with untrusted content. It inherits all of `lxml`'s flaws with regards to XML attacks, and recursively resolves data structures. Because deserialisation is driven from the dataclass definitions, it shouldn't be possible to execute arbitrary Python code (not a guarantee, see license). Denial of service attacks would very likely be feasible. One workaround may be to [use `lxml` to validate](https://lxml.de/validation.html) untrusted content with a strict schema.
 
 Requires Python 3.7 or higher.
 
