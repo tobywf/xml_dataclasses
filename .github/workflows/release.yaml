@@ -1,4 +1,4 @@
-name: XML dataclasses publish
+name: Publish
 on:
   release:
     types:

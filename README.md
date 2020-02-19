@@ -1,6 +1,8 @@
 # XML dataclasses
 
-[![License: MPL 2.0](https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg)](https://opensource.org/licenses/MPL-2.0)
+[![License: MPL 2.0](https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg)](https://opensource.org/licenses/MPL-2.0) ![Build](https://github.com/tobywf/xml_dataclasses/workflows/Build/badge.svg?branch=master&event=push)
+
+[XML dataclasses on PyPI](https://pypi.org/project/xml-dataclasses/)
 
 This library enables (de)serialising XML into Python dataclasses. XML dataclasses build on normal dataclasses from the standard library and [`lxml`](https://pypi.org/project/lxml/) elements. Loading and saving these elements is left to the consumer for flexibility of the desired output.
 

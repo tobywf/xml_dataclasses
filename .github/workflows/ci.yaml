@@ -1,4 +1,4 @@
-name: XML dataclasses CI
+name: Build
 on:
   push:
     branches:
