@@ -14,12 +14,15 @@ def make_field(default: Union[_T, _MISSING_TYPE]) -> Field[_T]:
     return field(default=default)
 
 
+# NOTE: Actual return type is 'Field[_T]', but we want to help type checkers
+# to understand the magic that happens at runtime.
+# see https://github.com/python/typeshed/blob/master/stdlib/3.7/dataclasses.pyi
 def rename(
     f: Optional[Field[_T]] = None,
     default: Union[_T, _MISSING_TYPE] = MISSING,
     name: Optional[str] = None,
     ns: Optional[str] = None,
-) -> Field[_T]:
+) -> _T:
     if f is None:
         f = make_field(default=default)
     metadata = dict(f.metadata)
@@ -28,15 +31,18 @@ def rename(
     if ns:
         metadata["xml:ns"] = ns
     f.metadata = metadata
-    return f
+    return f  # type: ignore
 
 
+# NOTE: Actual return type is 'Field[_T]', but we want to help type checkers
+# to understand the magic that happens at runtime.
+# see https://github.com/python/typeshed/blob/master/stdlib/3.7/dataclasses.pyi
 def text(
     f: Optional[Field[_T]] = None, default: Union[_T, _MISSING_TYPE] = MISSING
-) -> Field[_T]:
+) -> _T:
     if f is None:
         f = make_field(default=default)
     metadata = dict(f.metadata)
     metadata["xml:text"] = True
     f.metadata = metadata
-    return f
+    return f  # type: ignore

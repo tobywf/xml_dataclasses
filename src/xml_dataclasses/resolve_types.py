@@ -14,6 +14,7 @@ from typing import (
     Optional,
     Tuple,
     Type,
+    TypeVar,
     Union,
 )
 
@@ -28,6 +29,8 @@ from .exceptions import (
 from .lxml_utils import format_ns
 
 NoneType: Type[Any] = type(None)
+# Union here is a hack to make this a valid alias
+NsMap = Union[Mapping[Optional[str], str]]
 
 
 class XmlDataclass:
@@ -35,7 +38,10 @@ class XmlDataclass:
     __attributes__: Collection[AttrInfo]
     __children__: Collection[ChildInfo]
     __text_field__: Optional[TextInfo]
-    __nsmap__: Optional[Mapping[Optional[str], str]]
+    __nsmap__: Optional[NsMap]
+
+
+XmlDataclassInstance = TypeVar("XmlDataclassInstance", bound=XmlDataclass)
 
 
 def is_xml_dataclass(tp: Type[Any]) -> bool:
@@ -228,8 +234,13 @@ class _XmlNameTracker:
             raise XmlDataclassDuplicateFieldError(msg)
 
 
-def xml_dataclass(cls: Type[Any]) -> Type[XmlDataclass]:
-    new_cls = dataclass()(cls)
+def xml_dataclass(cls: Type[Any]) -> Type[XmlDataclassInstance]:
+    # if a dataclass is doubly decorated, metadata seems to disappear...
+    if is_dataclass(cls):
+        new_cls = cls
+    else:
+        new_cls = dataclass()(cls)
+
     try:
         new_cls.__ns__
     except AttributeError:

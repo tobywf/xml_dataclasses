@@ -6,7 +6,13 @@ from typing import Any, Dict, List, Mapping, Optional, Type, TypeVar, Union
 from lxml.builder import ElementMaker  # type: ignore
 
 from .lxml_utils import strip_ns
-from .resolve_types import ChildInfo, TextInfo, XmlDataclass, is_xml_dataclass
+from .resolve_types import (
+    ChildInfo,
+    TextInfo,
+    XmlDataclass,
+    XmlDataclassInstance,
+    is_xml_dataclass,
+)
 
 _T = TypeVar("_T")
 
@@ -132,7 +138,9 @@ def _validate_name(cls: Type[XmlDataclass], el: Any, name: str) -> None:
         )
 
 
-def load(cls: Type[XmlDataclass], el: Any, name: Optional[str] = None) -> XmlDataclass:
+def load(
+    cls: Type[XmlDataclassInstance], el: Any, name: Optional[str] = None
+) -> XmlDataclassInstance:
     if not is_xml_dataclass(cls):
         raise ValueError(f"Class '{cls!r}' is not an XML dataclass")
 
@@ -164,7 +172,9 @@ def load(cls: Type[XmlDataclass], el: Any, name: Optional[str] = None) -> XmlDat
     return instance
 
 
-def dump(instance: XmlDataclass, name: str, nsmap: Mapping[Optional[str], str]) -> Any:
+def dump(
+    instance: XmlDataclassInstance, name: str, nsmap: Mapping[Optional[str], str]
+) -> Any:
     cls = type(instance)
     if not is_xml_dataclass(cls):
         raise ValueError(f"Class '{cls!r}' is not an XML dataclass")
