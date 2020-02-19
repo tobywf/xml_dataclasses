@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from typing import Optional
 from unittest.mock import patch
 
@@ -10,7 +10,6 @@ from xml_dataclasses.exceptions import (
     XmlDataclassInternalError,
     XmlDataclassModelError,
     XmlDataclassNoNamespaceError,
-    XmlTypeError,
 )
 from xml_dataclasses.modifiers import rename, text
 from xml_dataclasses.resolve_types import FieldInfo, is_xml_dataclass, xml_dataclass
@@ -35,7 +34,7 @@ class XmlDt2:
 
 @pytest.mark.parametrize(
     "cls,result",
-    [(int, False), (str, False), (object, False), (Dt, False), (XmlDt1, True),],
+    [(int, False), (str, False), (object, False), (Dt, False), (XmlDt1, True)],
 )
 def test_is_xml_dataclass(cls, result):
     assert is_xml_dataclass(cls) is result
@@ -207,3 +206,19 @@ def test_field_info_is_required_get_default(f, is_req):
         assert exc_info.value.__cause__ is None
     else:
         assert attr_info.get_default() is None
+
+
+def test_xml_dataclass_already_a_dataclass_stays_a_dataclass():
+    @dataclass
+    class Foo:
+        __ns__ = None
+        bar: str = rename(name="baz")
+
+    Bar = xml_dataclass(Foo)
+    dt_fields = fields(Bar)
+    assert len(dt_fields) == 1
+    assert dt_fields[0].metadata == {"xml:name": "baz"}
+
+    assert len(Bar.__attributes__) == 1
+    attr_info = Bar.__attributes__[0]
+    assert attr_info.xml_name == "baz"

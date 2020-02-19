@@ -22,4 +22,6 @@ else
   coverage html
   exit 1
 fi
+
+mypy functional/container_test.py --strict
 pytest functional/ --random-order $PYTEST_DEBUG
