@@ -1,13 +1,13 @@
 [tool.poetry]
 name = "xml_dataclasses"
-version = "0.0.3"
+version = "0.0.4"
 description = "(De)serialize XML documents into specially-annotated dataclasses"
 authors = ["Toby Fleming <tobywf@users.noreply.github.com>"]
 license = "MPL-2.0"
 readme = "README.md"
 homepage = "https://github.com/tobywf/xml_dataclasses"
 classifiers = [
-    "Development Status :: 2 - Pre-Alpha",
+    "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "Natural Language :: English",
     "Operating System :: OS Independent",
