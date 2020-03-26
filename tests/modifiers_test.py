@@ -5,7 +5,7 @@ from itertools import combinations
 
 import pytest
 
-from xml_dataclasses.modifiers import rename, text
+from xml_dataclasses.modifiers import ignored, rename, text
 
 
 def dict_comb(items, r=2):
@@ -82,3 +82,9 @@ def test_text_has_field_default_ignored(default):
     assert actual_field is expected_field
     assert actual_field.default is MISSING
     assert actual_field.metadata == expected_md
+
+
+def test_ignored_field():
+    actual_field = ignored()
+    assert not actual_field.init
+    assert not actual_field.compare
