@@ -2,7 +2,7 @@ import logging
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
-from .modifiers import rename, text  # isort:skip
+from .modifiers import rename, text, ignored  # isort:skip
 from .resolve_types import (  # isort:skip
     is_xml_dataclass,
     xml_dataclass,
@@ -23,4 +23,5 @@ __all__ = [
     "xml_dataclass",
     "NsMap",
     "XmlDataclass",
+    "ignored",
 ]

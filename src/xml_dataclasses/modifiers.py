@@ -46,3 +46,10 @@ def text(
     metadata["xml:text"] = True
     f.metadata = metadata
     return f  # type: ignore
+
+
+# NOTE: Actual return type is 'Field[_T]', but we want to help type checkers
+# to understand the magic that happens at runtime.
+# see https://github.com/python/typeshed/blob/master/stdlib/3.7/dataclasses.pyi
+def ignored() -> _T:
+    return field(init=False, compare=False)  # type: ignore

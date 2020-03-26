@@ -257,6 +257,10 @@ def xml_dataclass(cls: Type[Any]) -> Type[XmlDataclassInstance]:
     children: List[ChildInfo] = []
     text_field = None
     for f in fields(cls):
+        # ignore fields not required in the constructor
+        if not f.init:
+            continue
+
         field_info = _resolve_field_type(f)
         if isinstance(field_info, TextInfo):
             if text_field is not None:

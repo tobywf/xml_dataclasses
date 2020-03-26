@@ -5,7 +5,15 @@ from typing import List
 import pytest  # type: ignore
 from lxml import etree  # type: ignore
 
-from xml_dataclasses import NsMap, XmlDataclass, dump, load, rename, xml_dataclass
+from xml_dataclasses import (
+    NsMap,
+    XmlDataclass,
+    dump,
+    ignored,
+    load,
+    rename,
+    xml_dataclass,
+)
 
 from .utils import lmxl_dump
 
@@ -36,10 +44,12 @@ class Container(XmlDataclass):
     version: str
     rootfiles: RootFiles
     # WARNING: this is an incomplete implementation of an OPF container
+    _version: int = ignored()
 
     def xml_validate(self) -> None:
         if self.version != "1.0":
             raise ValueError(f"Unknown container version '{self.version}'")
+        self._version = 1
 
 
 @pytest.mark.parametrize("remove_blank_text", [True, False])

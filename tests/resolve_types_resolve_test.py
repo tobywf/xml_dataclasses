@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field, fields
 from itertools import product
 from typing import List, Optional, Union, _GenericAlias
 
@@ -118,3 +118,20 @@ def test_valid_field_types_child(tp, types, is_list, is_optional):
     # resolve_types_resolve_test.XmlDt1]], NoneType]
     assert set(bar.base_types) == types
     assert bar.is_list is is_list
+
+
+def test_non_ctor_field_is_ignored():
+    @xml_dataclass
+    class Foo:
+        __ns__ = None
+        bar: str = field(init=False)
+
+    assert not Foo.__attributes__
+    assert not Foo.__text_field__
+    assert not Foo.__children__
+
+    dt_fields = fields(Foo)
+    assert len(dt_fields) == 1
+    dt_field = dt_fields[0]
+    assert dt_field.name == "bar"
+    assert not dt_field.init

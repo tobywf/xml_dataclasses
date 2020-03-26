@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "xml_dataclasses"
-version = "0.0.5"
+version = "0.0.6"
 description = "(De)serialize XML documents into specially-annotated dataclasses"
 authors = ["Toby Fleming <tobywf@users.noreply.github.com>"]
 license = "MPL-2.0"

@@ -20,6 +20,7 @@ Requires Python 3.7 or higher.
 * Inheritance does work, but has the same limitations as dataclasses. Inheriting from base classes with required fields and declaring optional fields doesn't work due to field order. This isn't recommended
 * Namespace support is decent as long as correctly declared. I've tried on several real-world examples, although they were known to be valid. `lxml` does a great job at expanding namespace information when loading and simplifying it when saving
 * Post-load validation hook `xml_validate`
+* Fields not required in the constructor are ignored by this library (via `ignored()` or `init=False`)
 
 ## Patterns
 
@@ -83,6 +84,14 @@ def xml_validate(self) -> None:
 ```
 
 If defined, the `load` function will call it after all values have been loaded and assigned to the XML dataclass. You can validate the fields you want inside this method. Return values are ignored; instead raise and catch exceptions.
+
+### Ignored fields
+
+Fields not required in the constructor are ignored by this library (new in version 0.0.6). This is useful if you want to populate a field via post-load validation.
+
+You can simply set `init=False`, although you may also want to exclude the field from comparisons. The `ignored` function does this, and can also be used.
+
+The name doesn't matter, but it might be useful to use the `_` prefix as a convention.
 
 ## Example (fully type hinted)
 
@@ -192,9 +201,26 @@ This makes sense in many cases, but possibly not every case.
 Most of these limitations/assumptions are enforced. They may make this project unsuitable for your use-case.
 
 * If you need to pass any parameters to the wrapped `@dataclass` decorator, apply it before the `@xml_dataclass` decorator
-* Setting the `init` parameter of a dataclass' `field` will lead to bad things happening, this isn't supported.
 * Deserialisation is strict; missing required attributes and child elements will cause an error. I want this to be the default behaviour, but it should be straightforward to add a parameter to `load` for lenient operation
 * Dataclasses must be written by hand, no tools are provided to generate these from, DTDs, XML schema definitions, or RELAX NG schemas
+
+## Changelog
+
+### [0.0.6] - 2020-03-25
+
+* Allow ignored fields via `init=false` or the `ignored` function
+
+### [0.0.5] - 2020-02-18
+
+* Fixed type hinting for consumers. While the library passed mypy validation, it was hard to get XML dataclasses in a codebase to pass mypy validation
+
+### [0.0.4] - 2020-02-16
+
+* Improved type resolving. This lead to easier field definitions, as `attr` and `child` are no longer needed because the type of the field is inferred
+
+### [0.0.3] - 2020-02-16
+
+* Added support for union types on children
 
 ## Development
 
