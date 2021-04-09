@@ -1,30 +1,35 @@
+# it's called "Build" because this dictates the badge name
 name: Build
 on:
   push:
     branches:
     - master
+    - workflow_check
   pull_request:
     branches:
     - master
 jobs:
-  lint:
-    name: lint
+  check:
+    name: Check
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.7, 3.8]
+        python-version: ['3.7', '3.8', '3.9']
     steps:
-    - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v1
+      uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
+
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install poetry pre-commit
+        python -m pip install --upgrade pip poetry pre-commit
         poetry install
+
     - name: Run checks
       run: |
         pre-commit run --all-files
-        poetry run ./lint "CHECK"
+        poetry run task check

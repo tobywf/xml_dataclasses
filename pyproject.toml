@@ -14,40 +14,85 @@ classifiers = [
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
     "Topic :: Text Processing :: Markup :: XML",
 ]
 
 [tool.poetry.dependencies]
 python = "^3.7"
-lxml = "^4.5.0"
+lxml = "^4.6.3"
 
 [tool.poetry.dev-dependencies]
-pytest = "^5.3.5"
-black = "^19.10b0"
-isort = "^4.3.21"
-pylint = "^2.4.4"
-pytest-cov = "^2.8.1"
-mypy = "^0.761"
-ipython = "^7.12.0"
+pytest = "^6.2.3"
+black = "^20.8b1"
+isort = "^5.8.0"
+pylint = "^2.7.4"
+pytest-cov = "^2.11.1"
+mypy = "^0.812"
+ipython = "^7.22.0"
 coverage = {extras = ["toml"], version = "^5.0.3"}
 pytest-random-order = "^1.0.4"
+taskipy = "^1.7.0"
 
 [tool.isort]
-# see https://black.readthedocs.io/en/stable/the_black_code_style.html
+profile = "black"
 multi_line_output = 3
-include_trailing_comma = true
-force_grid_wrap = 0
-use_parentheses = true
-line_length = 88
-
-indent = '    '
-combine_as_imports = true
 
 [tool.coverage.run]
 branch = true
 
 [tool.coverage.report]
 fail_under = 100
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = """
+--cov=xml_dataclasses \
+--cov-report term \
+--cov-report html \
+--random-order"""
+
+[tool.pylint.master]
+extension-pkg-whitelist = "lxml"
+ignore = "CVS"
+persistent = true
+jobs = 1
+
+[tool.pylint.message_control]
+
+disable= """,
+bad-continuation,
+line-too-long,
+ungrouped-imports,
+wrong-import-position,
+missing-docstring,
+fixme,
+too-few-public-methods,
+"""
+
+[tool.pylint.basic]
+good-names = "_,e,el,ex,f,tp,k,v,ns"
+
+[tool.pylint.format]
+indent-string = "    "
+
+[tool.taskipy.tasks]
+isort = "isort -v ."
+black = "black ."
+mypy = "mypy --strict src/xml_dataclasses/ functional/container_test.py"
+pylint = "pylint src/xml_dataclasses/"
+
+lint = "task isort && task black && task mypy && task pylint"
+
+test = "pytest"
+functional = "pytest --no-cov functional/"
+
+all = "task lint && task test && task functional"
+
+isort_check = "isort --check-only ."
+black_check = "black --check ."
+
+check = "task isort_check && task black_check && task mypy && task pylint && task test && task functional"
 
 [build-system]
 requires = ["poetry>=1.0.0"]

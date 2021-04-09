@@ -1,12 +1,10 @@
 # pylint: disable=unsubscriptable-object
-# unsubscriptable-object clashes with type hints
 from __future__ import annotations
 
 from dataclasses import MISSING, Field, dataclass, fields, is_dataclass
 from typing import _GenericAlias  # type: ignore
 from typing import (
     Any,
-    Callable,
     Collection,
     Dict,
     List,
@@ -16,6 +14,7 @@ from typing import (
     Type,
     TypeVar,
     Union,
+    cast,
 )
 
 from .exceptions import (
@@ -48,9 +47,9 @@ def is_xml_dataclass(tp: Type[Any]) -> bool:
     # all XML dataclasses also must be regular dataclasses
     if not is_dataclass(tp):
         return False
-    # pylint: disable=pointless-statement
     # check required attributes
     try:
+        # pylint: disable=pointless-statement
         tp.__ns__
         tp.__attributes__
         tp.__children__
@@ -71,15 +70,18 @@ class FieldInfo:
     # this is used for loading
     @property
     def is_required(self) -> bool:
-        factory: Callable[[], Any] = self.field.default_factory  # type: ignore
+        # https://github.com/python/mypy/issues/6910
+        factory = cast(object, self.field.default_factory)  # type: ignore[misc]
         return self.field.default is MISSING and factory is MISSING
 
     def get_default(self) -> Any:
-        factory: Callable[[], Any] = self.field.default_factory  # type: ignore
+        # https://github.com/python/mypy/issues/6910
+        factory = cast(object, self.field.default_factory)  # type: ignore[misc]
         if self.field.default is not MISSING:
             return self.field.default
         if factory is not MISSING:
-            return factory()
+            default_factory = self.field.default_factory  # type: ignore[misc]
+            return default_factory()
         raise ValueError("Field is required")
 
 

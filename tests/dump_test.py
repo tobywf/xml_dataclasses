@@ -29,7 +29,8 @@ class Child2:
 
 
 @pytest.mark.parametrize(
-    "inst", [None, object(), "", 0, dataclass(type("Foo", (), {}))],
+    "inst",
+    [None, object(), "", 0, dataclass(type("Foo", (), {}))],
 )
 def test_dump_not_xml_dataclass(inst):
     with pytest.raises(ValueError) as exc_info:

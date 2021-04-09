@@ -30,7 +30,7 @@ def _load_attributes(cls: Type[XmlDataclass], el: Any) -> Mapping[str, str]:
             if attr.is_required:
                 raise ValueError(
                     f"Required attribute '{attr.xml_name}' not found on '{el.tag}'"
-                )
+                ) from None
             attr_value = attr.get_default()
         processed.add(attr.xml_name)
         values[attr.dt_name] = attr_value
