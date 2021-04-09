@@ -549,3 +549,33 @@ def test_load_with_validation():
     el = etree.fromstring('<foo bar="baz" />')
     with pytest.raises(MyError):
         load(Foo, el, "foo")
+
+
+def test_load_with_child_comment_not_stripped():
+    @xml_dataclass
+    class Foo:
+        __ns__ = None
+        bar: List[Union[Child1, Child2]]
+
+    el = etree.fromstring('<foo><!-- comment --><bar spam="eggs" /></foo>')
+
+    with pytest.raises(ValueError) as exc_info:
+        load(Foo, el, "foo")
+
+    msg = str(exc_info.value)
+    assert "Element 'foo' contains comments" in msg
+
+
+def test_load_with_text_comment_not_stripped():
+    @xml_dataclass
+    class Foo:
+        __ns__ = None
+        value: str = text()
+
+    el = etree.fromstring("<foo>spam<!-- comment -->eggs</foo>")
+
+    with pytest.raises(ValueError) as exc_info:
+        load(Foo, el, "foo")
+
+    msg = str(exc_info.value)
+    assert "Element 'foo' contains comments" in msg
