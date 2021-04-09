@@ -54,7 +54,7 @@ jobs:
         tag_name: ${{ steps.info.outputs.version }}
 
     - name: Publish to PyPI
-      if: ${{ steps.info.outputs.draft == false }}
+      if: ${{ steps.info.outputs.draft == 'false' }}
       run: |
         poetry config pypi-token.pypi "${{ secrets.PYPI_TOKEN }}"
         poetry publish
