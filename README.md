@@ -1,26 +1,39 @@
 # XML dataclasses
 
-[![License: MPL 2.0](https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg)](https://opensource.org/licenses/MPL-2.0) ![Build](https://github.com/tobywf/xml_dataclasses/workflows/Build/badge.svg?branch=master&event=push)
+[![License: MPL 2.0](https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg)](https://opensource.org/licenses/MPL-2.0) ![Build](https://github.com/tobywf/xml_dataclasses/workflows/Build/badge.svg?branch=master)
 
 [XML dataclasses on PyPI](https://pypi.org/project/xml-dataclasses/)
 
-This library enables (de)serialising XML into Python dataclasses. XML dataclasses build on normal dataclasses from the standard library and [`lxml`](https://pypi.org/project/lxml/) elements. Loading and saving these elements is left to the consumer for flexibility of the desired output.
+This library maps XML to and from Python dataclasses. It build on normal dataclasses from the standard library and uses [`lxml`](https://pypi.org/project/lxml/) for parsing/generating XML.
 
-It's currently in alpha. It isn't ready for production if you aren't willing to do your own evaluation/quality assurance. I don't recommend using this library with untrusted content. It inherits all of `lxml`'s flaws with regards to XML attacks, and recursively resolves data structures. Because deserialisation is driven from the dataclass definitions, it shouldn't be possible to execute arbitrary Python code (not a guarantee, see license). Denial of service attacks would very likely be feasible. One workaround may be to [use `lxml` to validate](https://lxml.de/validation.html) untrusted content with a strict schema.
+It's currently in alpha. It isn't ready for production if you aren't willing to do your own evaluation/quality assurance.
 
 Requires Python 3.7 or higher.
 
 ## Features
 
-* XML dataclasses are also dataclasses, and only require a single decorator to work (but see type hinting section for issues)
-* Convert XML documents to well-defined dataclasses, which should work with IDE auto-completion
+* Convert XML documents to well-defined dataclasses, which work with Mypy or IDE auto-completion
+* XML dataclasses are dataclasses
+* Full control of parsing and generating XML via `lxml`
 * Loading and dumping of attributes, child elements, and text content
-* Required and optional attributes and child elements
+* Required and optional attributes/child elements
 * Lists of child elements are supported, as are unions and lists or unions
 * Inheritance does work, but has the same limitations as dataclasses. Inheriting from base classes with required fields and declaring optional fields doesn't work due to field order. This isn't recommended
 * Namespace support is decent as long as correctly declared. I've tried on several real-world examples, although they were known to be valid. `lxml` does a great job at expanding namespace information when loading and simplifying it when saving
 * Post-load validation hook `xml_validate`
 * Fields not required in the constructor are ignored by this library (via `ignored()` or `init=False`)
+
+## Limitations
+
+* Whitespace and comments aren't supported in the data model. They must be stripped when loading the XML
+* So far, I haven't found any examples where XML can't be mapped to a dataclass, but it's likely possible given how complex XML is
+* Strict mapping. Currently, if an unknown element is encountered, an error is raised (see [#3](https://github.com/tobywf/xml_dataclasses/issues/3), pull requests welcome)
+* No typing/type conversions. Since XML is untyped, only string values are currently allowed. Type conversions are tricky to implement in a type-safe and extensible manner.
+* Dataclasses must be written by hand, no tools are provided to generate these from, DTDs, XML schema definitions, or RELAX NG schemas
+
+## Security
+
+The caveats concerning untrusted content are roughly the same as with `lxml`, since that does the parsing. This is good, since `lxml`'s behaviour to XML attacks are well-understood. This library recursively resolves data structures, which may have memory implications for unbounded payloads. Because loading is driven from the dataclass definitions, it shouldn't be possible to execute arbitrary Python code (not a guarantee, see license). If you must deal with untrusted content, a workaround is to [use `lxml` to validate](https://lxml.de/validation.html) untrusted content with a strict schema, which you may already be doing.
 
 ## Patterns
 
@@ -146,7 +159,7 @@ class Container(XmlDataclass):
 
 if __name__ == "__main__":
     nsmap: NsMap = {None: CONTAINER_NS}
-    # see Gotchas, stripping whitespace is highly recommended
+    # see Gotchas, stripping whitespace and comments is highly recommended
     parser = etree.XMLParser(remove_blank_text=True, remove_comments=True)
     lxml_el_in = etree.parse("container.xml", parser).getroot()
     container = load(Container, lxml_el_in, "container")
@@ -186,25 +199,17 @@ parser = etree.XMLParser(remove_blank_text=True, remove_comments=True)
 
 By default, `lxml` preserves whitespace. This can cause a problem when checking if elements have no text. The library does attempt to strip these; literally via Python's `strip()`. But `lxml` is likely faster and more robust.
 
-Similarly, comments are included by default, and because deserialization is strict, they will be considered as nodes that the dataclass has not declared. It is recommended to omit them during parsing.
+Similarly, comments are included by default, and because loading is strict, they will be considered as nodes that the dataclass has not declared. It is recommended to omit them during parsing.
 
 ### Optional vs required
 
 On dataclasses, optional fields also usually have a default value to be useful. But this isn't required; `Optional` is just a type hint to say `None` is allowed. This would occur e.g. if an element has no children.
 
-For XML dataclasses, on loading/deserialisation, whether or not a field is required is determined by if it has a `default`/`default_factory` defined. If so, and it's missing, that default is used. Otherwise, an error is raised.
+For loading XML dataclasses, whether or not a field is required is determined by if it has a `default`/`default_factory` defined. If so, and it's missing, that default is used. Otherwise, an error is raised.
 
-For dumping/serialisation, the default isn't considered. Instead, if a value is marked as `Optional` and the value is `None`, it isn't written.
+For dumping, the default isn't considered. Instead, if a value is marked as `Optional` and the value is `None`, it isn't written.
 
 This makes sense in many cases, but possibly not every case.
-
-### Other limitations and Assumptions
-
-Most of these limitations/assumptions are enforced. They may make this project unsuitable for your use-case.
-
-* If you need to pass any parameters to the wrapped `@dataclass` decorator, apply it before the `@xml_dataclass` decorator
-* Deserialisation is strict; missing required attributes and child elements will cause an error. I want this to be the default behaviour, but it should be straightforward to add a parameter to `load` for lenient operation
-* Dataclasses must be written by hand, no tools are provided to generate these from, DTDs, XML schema definitions, or RELAX NG schemas
 
 ## Changelog
 
@@ -244,13 +249,12 @@ Dependencies are managed via [poetry](https://python-poetry.org/). To install al
 poetry install
 ```
 
-This will also install development dependencies such as `black`, `isort`, `pylint`, `mypy`, and `pytest`. I've provided a simple script to run these during development called `lint`. You can either run it from a shell session with the poetry-installed virtual environment, or run as follows:
+This will also install development dependencies such as `black`, `isort`, `pylint`, `mypy`, and `pytest`. Pre-defined tasks make it easy to run these, for example
 
-```
-poetry run ./lint
-```
+* `poetry run task lint` - this runs `black`, `isort`, `mypy`, and `pylint`
+* `poetry run task test` - this runs `pytest` with coverage
 
-Auto-formatters will be applied, and static analysis/tests are run in order. The script stops on failure to allow quick iteration.
+For a full list of tasks, see `poetry run task --list`.
 
 ## License
 

@@ -1,5 +1,4 @@
 # pylint: disable=unsubscriptable-object
-# unsubscriptable-object clashes with type hints
 from __future__ import annotations
 
 from dataclasses import _MISSING_TYPE, MISSING, Field, field

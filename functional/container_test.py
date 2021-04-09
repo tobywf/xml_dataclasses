@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import List
 
-import pytest  # type: ignore
+import pytest
 from lxml import etree  # type: ignore
 
 from xml_dataclasses import (

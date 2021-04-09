@@ -23,7 +23,8 @@ class Child2:
 
 
 @pytest.mark.parametrize(
-    "cls", [None, object, str, int, dataclass(type("Foo", (), {}))],
+    "cls",
+    [None, object, str, int, dataclass(type("Foo", (), {}))],
 )
 def test_load_not_xml_dataclass(cls):
     with pytest.raises(ValueError) as exc_info:

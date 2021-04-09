@@ -12,7 +12,8 @@ def test_format_ns_good_path(name, ns, tag):
 
 
 @pytest.mark.parametrize(
-    "tag,name,ns", [("foo", "foo", None), ("{xml}foo", "foo", "xml")],
+    "tag,name,ns",
+    [("foo", "foo", None), ("{xml}foo", "foo", "xml")],
 )
 def test_strip_ns_good_path(tag, name, ns):
     assert strip_ns(tag) == (name, ns)
