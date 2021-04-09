@@ -5,7 +5,7 @@ import pytest
 from lxml import etree
 
 # test public exports
-from xml_dataclasses import load, text, xml_dataclass
+from xml_dataclasses import Options, load, text, xml_dataclass
 
 NS = "https://tobywf.com"
 
@@ -135,7 +135,7 @@ def test_load_attributes_missing_default():
     assert foo.bar == "baz"
 
 
-def test_load_attributes_undeclared():
+def test_load_attributes_undeclared_strict():
     @xml_dataclass
     class Foo:
         __ns__ = None
@@ -148,6 +148,16 @@ def test_load_attributes_undeclared():
     assert "undeclared attributes" in msg
     assert "'foo'" in msg
     assert "'bar'" in msg
+
+
+def test_load_attributes_undeclared_lenient():
+    @xml_dataclass
+    class Foo:
+        __ns__ = None
+
+    el = etree.fromstring('<foo bar="baz" />')
+    options = Options(ignore_unknown_attributes=True)
+    load(Foo, el, "foo", options)
 
 
 def test_load_text_present_required():
@@ -290,7 +300,7 @@ def test_load_children_single_missing_optional():
     assert foo.bar is None
 
 
-def test_load_children_single_undeclared():
+def test_load_children_single_undeclared_strict():
     @xml_dataclass
     class Foo:
         __ns__ = None
@@ -303,6 +313,16 @@ def test_load_children_single_undeclared():
     assert "undeclared child elements" in msg
     assert "'foo'" in msg
     assert "'bar'" in msg
+
+
+def test_load_children_single_undeclared_lenient():
+    @xml_dataclass
+    class Foo:
+        __ns__ = None
+
+    el = etree.fromstring("<foo><bar /></foo>")
+    options = Options(ignore_unknown_children=True)
+    load(Foo, el, "foo", options)
 
 
 def test_load_children_single_multiple_els():
