@@ -4,6 +4,7 @@ from collections import defaultdict
 from typing import Any, Dict, List, Mapping, Optional, Type, TypeVar, Union
 
 from lxml.builder import ElementMaker  # type: ignore
+from lxml.etree import _Comment as Comment  # type: ignore
 
 from .lxml_utils import strip_ns
 from .resolve_types import (
@@ -44,8 +45,10 @@ def _load_attributes(cls: Type[XmlDataclass], el: Any) -> Mapping[str, str]:
 
 
 def _load_text(info: TextInfo, el: Any) -> Mapping[str, str]:
-    has_child = next(el.iterchildren(), None) is not None
-    if has_child:
+    child = next(el.iterchildren(), None)
+    if child is not None:
+        if isinstance(child, Comment):
+            raise ValueError(f"Element '{el.tag}' contains comments")
         raise ValueError(f"Element '{el.tag}' has child elements (expected text only)")
 
     text = el.text
@@ -64,6 +67,8 @@ def _load_children(cls: Type[XmlDataclass], el: Any) -> Mapping[str, XmlDataclas
     # child elements can be duplicated
     el_children: Dict[str, List[Any]] = defaultdict(list)
     for e in el.iterchildren():
+        if isinstance(e, Comment):
+            raise ValueError(f"Element '{el.tag}' contains comments")
         el_children[e.tag].append(e)
 
     values = {}

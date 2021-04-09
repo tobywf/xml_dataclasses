@@ -213,6 +213,10 @@ This makes sense in many cases, but possibly not every case.
 
 ## Changelog
 
+### [0.0.7] - unreleased
+
+* Warn if comments are found/don't treat comments as child elements in error messages
+
 ### [0.0.6] - 2020-03-25
 
 * Allow ignored fields via `init=false` or the `ignored` function

@@ -77,7 +77,7 @@ good-names = "_,e,el,ex,f,tp,k,v,ns"
 indent-string = "    "
 
 [tool.taskipy.tasks]
-isort = "isort -v ."
+isort = "isort ."
 black = "black ."
 mypy = "mypy --strict src/xml_dataclasses/ functional/container_test.py"
 pylint = "pylint src/xml_dataclasses/"
