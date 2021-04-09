@@ -7,6 +7,7 @@ from lxml.builder import ElementMaker  # type: ignore
 from lxml.etree import _Comment as Comment  # type: ignore
 
 from .lxml_utils import strip_ns
+from .options import Options
 from .resolve_types import (
     ChildInfo,
     TextInfo,
@@ -18,7 +19,9 @@ from .resolve_types import (
 _T = TypeVar("_T")
 
 
-def _load_attributes(cls: Type[XmlDataclass], el: Any) -> Mapping[str, str]:
+def _load_attributes(
+    cls: Type[XmlDataclass], el: Any, options: Options
+) -> Mapping[str, str]:
     values = {}
     processed = set()
 
@@ -37,7 +40,7 @@ def _load_attributes(cls: Type[XmlDataclass], el: Any) -> Mapping[str, str]:
         values[attr.dt_name] = attr_value
 
     unprocessed = set(el.attrib.keys()) - processed
-    if unprocessed:
+    if unprocessed and not options.ignore_unknown_attributes:
         readable = ", ".join(f"'{v}'" for v in unprocessed)
         raise ValueError(f"Found undeclared attributes on '{el.tag}': {readable}")
 
@@ -60,7 +63,9 @@ def _load_text(info: TextInfo, el: Any) -> Mapping[str, str]:
     return {info.dt_name: text}
 
 
-def _load_children(cls: Type[XmlDataclass], el: Any) -> Mapping[str, XmlDataclass]:
+def _load_children(
+    cls: Type[XmlDataclass], el: Any, options: Options
+) -> Mapping[str, XmlDataclass]:
     if el.text and el.text.strip():
         raise ValueError(f"Element '{el.tag}' has text (expected child elements only)")
 
@@ -126,7 +131,7 @@ def _load_children(cls: Type[XmlDataclass], el: Any) -> Mapping[str, XmlDataclas
         values[child.dt_name] = child_value
 
     unprocessed = el_children.keys() - processed
-    if unprocessed:
+    if unprocessed and not options.ignore_unknown_children:
         readable = ", ".join(f"'{v}'" for v in unprocessed)
         raise ValueError(f"Found undeclared child elements on '{el.tag}': {readable}")
 
@@ -144,20 +149,26 @@ def _validate_name(cls: Type[XmlDataclass], el: Any, name: str) -> None:
 
 
 def load(
-    cls: Type[XmlDataclassInstance], el: Any, name: Optional[str] = None
+    cls: Type[XmlDataclassInstance],
+    el: Any,
+    name: Optional[str] = None,
+    options: Optional[Options] = None,
 ) -> XmlDataclassInstance:
     if not is_xml_dataclass(cls):
         raise ValueError(f"Class '{cls!r}' is not an XML dataclass")
 
+    if not options:
+        options = Options()
+
     if name:
         _validate_name(cls, el, name)
 
-    attr_values = _load_attributes(cls, el)
+    attr_values = _load_attributes(cls, el, options)
     # are we just looking for text content?
     if cls.__text_field__:
         text_values = _load_text(cls.__text_field__, el)
     else:
-        child_values = _load_children(cls, el)
+        child_values = _load_children(cls, el, options)
 
     if cls.__text_field__:
         child_values = {}

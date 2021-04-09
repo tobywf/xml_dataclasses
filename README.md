@@ -27,7 +27,6 @@ Requires Python 3.7 or higher.
 
 * Whitespace and comments aren't supported in the data model. They must be stripped when loading the XML
 * So far, I haven't found any examples where XML can't be mapped to a dataclass, but it's likely possible given how complex XML is
-* Strict mapping. Currently, if an unknown element is encountered, an error is raised (see [#3](https://github.com/tobywf/xml_dataclasses/issues/3), pull requests welcome)
 * No typing/type conversions. Since XML is untyped, only string values are currently allowed. Type conversions are tricky to implement in a type-safe and extensible manner.
 * Dataclasses must be written by hand, no tools are provided to generate these from, DTDs, XML schema definitions, or RELAX NG schemas
 
@@ -53,6 +52,8 @@ class Foo:
 ```
 
 For now, you can work around this limitation with properties that do the conversion, and perform post-load validation.
+
+By default, unknown attributes raise an error. This can be disabled by passing `Options` to `load` with `ignore_unknown_attributes`.
 
 ### Defining text
 
@@ -86,6 +87,8 @@ Children must ultimately be other XML dataclasses. However, they can also be `Op
 If a class has children, it cannot have text content.
 
 Children can be renamed via the `rename` function. However, attempting to set a namespace is invalid, since the namespace is provided by the child type's XML dataclass. Also, unions of XML dataclasses must have the same namespace (you can use different fields with renaming if they have different namespaces, since the XML names will be resolved as a combination of namespace and name).
+
+By default, unknown children raise an error. This can be disabled by passing `Options` to `load` with `ignore_unknown_children`.
 
 ### Defining post-load validation
 
@@ -216,6 +219,7 @@ This makes sense in many cases, but possibly not every case.
 ### [0.0.7] - unreleased
 
 * Warn if comments are found/don't treat comments as child elements in error messages
+* Allow lenient loading of undeclared attributes or children
 
 ### [0.0.6] - 2020-03-25
 
