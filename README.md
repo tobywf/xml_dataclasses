@@ -147,7 +147,7 @@ class Container(XmlDataclass):
 if __name__ == "__main__":
     nsmap: NsMap = {None: CONTAINER_NS}
     # see Gotchas, stripping whitespace is highly recommended
-    parser = etree.XMLParser(remove_blank_text=True)
+    parser = etree.XMLParser(remove_blank_text=True, remove_comments=True)
     lxml_el_in = etree.parse("container.xml", parser).getroot()
     container = load(Container, lxml_el_in, "container")
     lxml_el_out = dump(container, "container", nsmap)
@@ -176,15 +176,17 @@ class Parent(XmlDataclass):
 
 It's important that `@dataclass` be the *last* decorator, i.e. the closest to the class definition (and so the first to be applied). Luckily, only the root class you intend to pass to `load`/`dump` has to inherit from `XmlDataclass`, but all classes should have the `@dataclass` decorator applied.
 
-### Whitespace
+### Whitespace and comments
 
-If you are able to, it is strongly recommended you strip whitespace from the input via `lxml`:
+If you are able to, it is strongly recommended you strip whitespace and comments from the input via `lxml`:
 
 ```python
-parser = etree.XMLParser(remove_blank_text=True)
+parser = etree.XMLParser(remove_blank_text=True, remove_comments=True)
 ```
 
 By default, `lxml` preserves whitespace. This can cause a problem when checking if elements have no text. The library does attempt to strip these; literally via Python's `strip()`. But `lxml` is likely faster and more robust.
+
+Similarly, comments are included by default, and because deserialization is strict, they will be considered as nodes that the dataclass has not declared. It is recommended to omit them during parsing.
 
 ### Optional vs required
 
