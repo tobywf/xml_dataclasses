@@ -1,26 +1,60 @@
-name: Publish
+name: Release
 on:
-  release:
-    types:
-    - created
+  push:
+    branches:
+    - workflow_release
+    tags:
+    - 'v[0-9]+.[0-9]+.[0-9]+'
 jobs:
-  publish:
-    name: publish
+  release:
+    name: release
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - name: Get the branch and tag
+      id: info
+      run: |
+        branch="${GITHUB_REF#refs/heads/}"
+        echo "$branch"
+        if [[ "$branch" == "workflow_release" ]]; then
+          echo "::set-output name=version::TEST-0.0.0"
+          echo "::set-output name=draft::true"
+        else
+          echo "::set-output name=version::${GITHUB_REF#refs/tags/}"
+          echo "::set-output name=draft::false"
+        fi
+        echo "::set-output name=date::$(env TZ=':America/Los_Angeles' date +'%Y-%m-%d')"
+
     - name: Set up Python
       uses: actions/setup-python@v1
       with:
         python-version: '3.7'
+
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install poetry
+
     - name: Build
       run: |
         poetry build
-    - name: Publish
+
+    - name: Create GitHub release
+      uses: softprops/action-gh-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        draft: ${{ steps.info.outputs.draft }}
+        files: |
+          dist/xml_dataclasses-*-py3-none-any.whl
+          dist/xml_dataclasses-*.tar.gz
+        name: ${{ steps.info.outputs.version }} (${{ steps.info.outputs.date }})
+        tag_name: ${{ steps.info.outputs.version }}
+
+    - name: Publish to PyPI
+      if: ${{ steps.info.outputs.draft == false }}
       run: |
         poetry config pypi-token.pypi "${{ secrets.PYPI_TOKEN }}"
         poetry publish

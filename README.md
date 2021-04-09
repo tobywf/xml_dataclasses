@@ -216,7 +216,7 @@ This makes sense in many cases, but possibly not every case.
 
 ## Changelog
 
-### [0.0.7] - unreleased
+### [0.0.7] - 2021-04-08
 
 * Warn if comments are found/don't treat comments as child elements in error messages
 * Allow lenient loading of undeclared attributes or children
