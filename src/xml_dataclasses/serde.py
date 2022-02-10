@@ -3,8 +3,8 @@ from __future__ import annotations
 from collections import defaultdict
 from typing import Any, Dict, List, Mapping, Optional, Type, TypeVar, Union
 
-from lxml.builder import ElementMaker  # type: ignore
-from lxml.etree import _Comment as Comment  # type: ignore
+from lxml.builder import ElementMaker  # type: ignore[import]
+from lxml.etree import _Comment as Comment  # type: ignore[import]
 
 from .lxml_utils import strip_ns
 from .options import Options
@@ -175,11 +175,11 @@ def load(
     else:
         text_values = {}
 
-    instance = cls(**attr_values, **text_values, **child_values)  # type: ignore
+    instance = cls(**attr_values, **text_values, **child_values)
     instance.__nsmap__ = el.nsmap
 
     try:
-        validate_fn = instance.xml_validate  # type: ignore
+        validate_fn = instance.xml_validate  # type: ignore[attr-defined]
     except AttributeError:
         pass
     else:
