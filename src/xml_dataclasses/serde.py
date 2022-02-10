@@ -86,7 +86,7 @@ def _load_children(
         # try to find one matching type
         for base_type in child.base_types:
             try:
-                return load(base_type, value)
+                return load(base_type, value, options=options)
             except ValueError as e:
                 exceptions.append(e)
 
@@ -118,8 +118,8 @@ def _load_children(
             # nice path for default use-case
             base_type = child.base_types[0]
             if child.is_list:
-                return [load(base_type, v) for v in value]
-            return load(base_type, value)
+                return [load(base_type, v, options=options) for v in value]
+            return load(base_type, value, options=options)
 
         if child.is_list:
             return [_unpack_union_child(child, v) for v in value]
