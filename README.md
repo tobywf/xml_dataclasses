@@ -216,6 +216,10 @@ This makes sense in many cases, but possibly not every case.
 
 ## Changelog
 
+### [0.0.9] - 2022-02-10
+
+* Fix issue passing options when loading children - thanks [tim-lansen](https://github.com/tim-lansen)!
+
 ### [0.0.7] and [0.0.8] - 2021-04-08
 
 * Warn if comments are found/don't treat comments as child elements in error messages
