@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import MISSING, Field, dataclass, fields, is_dataclass
-from typing import _GenericAlias  # type: ignore
+from typing import _GenericAlias  # type: ignore[attr-defined]
 from typing import (
     Any,
     Collection,
@@ -71,16 +71,16 @@ class FieldInfo:
     @property
     def is_required(self) -> bool:
         # https://github.com/python/mypy/issues/6910
-        factory = cast(object, self.field.default_factory)  # type: ignore[misc]
+        factory = cast(object, self.field.default_factory)
         return self.field.default is MISSING and factory is MISSING
 
     def get_default(self) -> Any:
         # https://github.com/python/mypy/issues/6910
-        factory = cast(object, self.field.default_factory)  # type: ignore[misc]
+        factory = cast(object, self.field.default_factory)
         if self.field.default is not MISSING:
             return self.field.default
         if factory is not MISSING:
-            default_factory = self.field.default_factory  # type: ignore[misc]
+            default_factory = self.field.default_factory
             return default_factory()
         raise ValueError("Field is required")
 
