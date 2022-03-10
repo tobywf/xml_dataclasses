@@ -9,7 +9,6 @@ from xml_dataclasses.exceptions import (
     XmlDataclassDuplicateFieldError,
     XmlDataclassInternalError,
     XmlDataclassModelError,
-    XmlDataclassNoNamespaceError,
 )
 from xml_dataclasses.modifiers import rename, text
 from xml_dataclasses.resolve_types import FieldInfo, is_xml_dataclass, xml_dataclass
