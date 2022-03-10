@@ -14,6 +14,7 @@ from .resolve_types import (
     XmlDataclass,
     XmlDataclassInstance,
     is_xml_dataclass,
+    NsMap,
 )
 
 _T = TypeVar("_T")
@@ -189,7 +190,7 @@ def load(
 
 
 def dump(
-    instance: XmlDataclassInstance, name: str, nsmap: Mapping[Optional[str], str]
+    instance: XmlDataclassInstance, name: str, nsmap: NsMap
 ) -> Any:
     cls = type(instance)
     if not is_xml_dataclass(cls):
