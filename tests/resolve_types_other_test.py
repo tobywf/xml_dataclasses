@@ -40,6 +40,7 @@ def test_is_xml_dataclass(cls, result):
     assert is_xml_dataclass(cls) is result
 
 
+@pytest.mark.skip(reason="Optional namespaces should be permitted")
 def test_xml_dataclass_no_namespace():
     class Foo:
         pass
@@ -47,6 +48,14 @@ def test_xml_dataclass_no_namespace():
     with pytest.raises(XmlDataclassNoNamespaceError) as exc_info:
         xml_dataclass(Foo)
     assert exc_info.value.__cause__ is None
+
+
+def test_xml_dataclass_no_namespace_allowed():
+    class Foo:
+        pass
+
+    ax = xml_dataclass(Foo)
+    print(ax)
 
 
 def test_xml_dataclass_text_and_children():
