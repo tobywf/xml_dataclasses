@@ -189,7 +189,7 @@ def load(
     return instance
 
 
-def dump(instance: XmlDataclassInstance, name: str, nsmap: NsMap) -> Any:
+def dump(instance: XmlDataclassInstance, name: str, nsmap: NsMap = None) -> Any:
     cls = type(instance)
     if not is_xml_dataclass(cls):
         raise ValueError(f"Class '{cls!r}' is not an XML dataclass")

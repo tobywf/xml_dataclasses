@@ -245,7 +245,7 @@ def xml_dataclass(cls: Type[Any]) -> Type[XmlDataclassInstance]:
     try:
         new_cls.__ns__
     except AttributeError:
-        new_cls.__ns__ = None
+        raise XmlDataclassNoNamespaceError() from None
 
     try:
         new_cls.__nsmap__
