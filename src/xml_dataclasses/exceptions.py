@@ -6,6 +6,13 @@ class XmlDataclassInternalError(XmlDataclassError):
     pass
 
 
+class XmlDataclassNoNamespaceError(XmlDataclassError):
+    MESSAGE = "XML dataclass without namespace"
+
+    def __init__(self) -> None:
+        super().__init__(self.MESSAGE)
+
+
 class XmlDataclassModelError(XmlDataclassError):
     pass
 

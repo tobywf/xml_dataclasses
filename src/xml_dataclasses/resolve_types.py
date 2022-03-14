@@ -22,6 +22,7 @@ from .exceptions import (
     XmlDataclassDuplicateFieldError,
     XmlDataclassInternalError,
     XmlDataclassModelError,
+    XmlDataclassNoNamespaceError,
     XmlTypeError,
 )
 from .lxml_utils import format_ns
