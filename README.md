@@ -216,6 +216,11 @@ This makes sense in many cases, but possibly not every case.
 
 ## Changelog
 
+### [Unreleased] - 2022-05-14
+
+* Stringified type hints and postponed annotations should now resolve correctly.
+* Allow `NsMap` to be `None`/optional - thanks [bphunter1972](https://github.com/bphunter1972)!
+
 ### [0.0.9] - 2022-02-10
 
 * Fix issue passing options when loading children - thanks [tim-lansen](https://github.com/tim-lansen)!
