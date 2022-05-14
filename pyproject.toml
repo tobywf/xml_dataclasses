@@ -82,7 +82,7 @@ show_error_codes = true
 [tool.taskipy.tasks]
 isort = "isort ."
 black = "black ."
-mypy = "mypy --strict src/xml_dataclasses/ functional/container_test.py"
+mypy = "mypy --strict src/xml_dataclasses/ functional/annotation_test.py functional/container_test.py"
 pylint = "pylint src/xml_dataclasses/"
 
 lint = "task isort && task black && task mypy && task pylint"

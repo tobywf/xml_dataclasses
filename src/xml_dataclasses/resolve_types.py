@@ -15,6 +15,7 @@ from typing import (
     TypeVar,
     Union,
     cast,
+    get_type_hints,
 )
 
 from .exceptions import (
@@ -200,8 +201,7 @@ def _resolve_child_type(
     return tuple(types), is_list, namespace
 
 
-def _resolve_field_type(f: Field[Any]) -> FieldInfo:
-    tp = f.type
+def _resolve_field_type(f: Field[Any], tp: Any) -> FieldInfo:
     try:
         # do this first, Optional is only allowed at the top-most level
         tp, is_optional = _resolve_optional_type(tp)
@@ -236,7 +236,9 @@ class _XmlNameTracker:
             raise XmlDataclassDuplicateFieldError(msg)
 
 
-def xml_dataclass(cls: Type[Any]) -> Type[XmlDataclassInstance]:
+def xml_dataclass(  # pylint: disable=too-many-branches
+    cls: Type[Any],
+) -> Type[XmlDataclassInstance]:
     # if a dataclass is doubly decorated, metadata seems to disappear...
     if is_dataclass(cls):
         new_cls = cls
@@ -258,12 +260,23 @@ def xml_dataclass(cls: Type[Any]) -> Type[XmlDataclassInstance]:
     attrs: List[AttrInfo] = []
     children: List[ChildInfo] = []
     text_field = None
+    # get the type hints for the class. this properly resolves quoted types or
+    # postponed annotations, which otherwise couldn't be done via the field
+    # type.
+    type_hints = get_type_hints(cls)
     for f in fields(cls):
         # ignore fields not required in the constructor
         if not f.init:
             continue
 
-        field_info = _resolve_field_type(f)
+        try:
+            field_type = type_hints[f.name]
+        except KeyError:  # pragma: no cover
+            raise XmlDataclassInternalError(
+                f"Failed to get type hint for field '{f.name}'"
+            ) from None
+
+        field_info = _resolve_field_type(f, field_type)
         if isinstance(field_info, TextInfo):
             if text_field is not None:
                 msg = (

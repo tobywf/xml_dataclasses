@@ -97,6 +97,8 @@ def test_invalid_field_types_2(tp, err):
         (Union[XmlDt1, XmlDt3, None], {XmlDt1, XmlDt3}, False, True),
         (List[Union[XmlDt3, XmlDt1]], {XmlDt1, XmlDt3}, True, False),
         (Optional[List[Union[XmlDt1, XmlDt3]]], {XmlDt1, XmlDt3}, True, True),
+        ("XmlDt1", {XmlDt1}, False, False),
+        (Optional["XmlDt1"], {XmlDt1}, False, True),
     ],
 )
 def test_valid_field_types_child(tp, types, is_list, is_optional):
