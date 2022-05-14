@@ -10,6 +10,7 @@ from .lxml_utils import strip_ns
 from .options import Options
 from .resolve_types import (
     ChildInfo,
+    NsMap,
     TextInfo,
     XmlDataclass,
     XmlDataclassInstance,
@@ -189,7 +190,9 @@ def load(
 
 
 def dump(
-    instance: XmlDataclassInstance, name: str, nsmap: Mapping[Optional[str], str]
+    instance: XmlDataclassInstance,
+    name: str,
+    nsmap: NsMap,
 ) -> Any:
     cls = type(instance)
     if not is_xml_dataclass(cls):

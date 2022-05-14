@@ -29,8 +29,7 @@ from .exceptions import (
 from .lxml_utils import format_ns
 
 NoneType: Type[Any] = type(None)
-# Union here is a hack to make this a valid alias
-NsMap = Union[Mapping[Optional[str], str]]
+NsMap = Optional[Mapping[Optional[str], str]]
 
 
 class XmlDataclass:
@@ -38,7 +37,7 @@ class XmlDataclass:
     __attributes__: Collection[AttrInfo]
     __children__: Collection[ChildInfo]
     __text_field__: Optional[TextInfo]
-    __nsmap__: Optional[NsMap]
+    __nsmap__: NsMap
 
 
 XmlDataclassInstance = TypeVar("XmlDataclassInstance", bound=XmlDataclass)
